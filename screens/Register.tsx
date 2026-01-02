@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { User as UserIcon, Mail, Lock } from 'lucide-react';
 import { Button } from '../components/Button';
@@ -49,7 +50,7 @@ export const Register: React.FC<Props> = ({ onRegister }) => {
          {/* Fallback */}
          <div className="hidden text-4xl font-black text-[#00965E] italic tracking-tighter mb-2">BIOFIT<sup className="text-lg not-italic">®</sup></div>
          
-         <p className="text-gray-500 font-medium text-lg">BIOTrivia & Training</p>
+         <p className="text-gray-500 font-medium text-lg">BIOTrivia</p>
       </div>
 
       <div className="w-full space-y-6">
