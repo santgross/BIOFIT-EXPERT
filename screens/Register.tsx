@@ -9,7 +9,8 @@ interface Props {
   onRegister: (user: User) => void;
   onSwitchToLogin: () => void;
 }
-export const Register: React.FC<Props> = ({ onRegister }) => {
+
+export const Register: React.FC<Props> = ({ onRegister, onSwitchToLogin }) => {
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -164,7 +165,8 @@ export const Register: React.FC<Props> = ({ onRegister }) => {
           >
             {loading ? 'Registrando...' : 'Comenzar Entrenamiento'}
           </Button>
-                    <div className="text-center mt-4">
+
+          <div className="text-center mt-4">
             <p className="text-gray-600">
               ¿Ya tienes cuenta?{' '}
               <button
