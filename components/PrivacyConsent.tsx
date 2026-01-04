@@ -20,7 +20,7 @@ export const PrivacyConsent: React.FC<Props> = ({ onAccept }) => {
           </div>
 
           {/* Contenido */}
-          <div className="space-y-4 text-gray-700 mb-6">
+          <div className="space-y-4 text-gray-700 mb-6 text-justify">
             <p className="leading-relaxed">
               Al registrarte en esta aplicación, autorizas el tratamiento de tus datos personales 
               (nombre, teléfono, correo electrónico y farmacia donde trabajas) conforme a la{' '}
