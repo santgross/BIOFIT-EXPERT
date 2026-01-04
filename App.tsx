@@ -7,10 +7,10 @@ import { ScenarioGame } from './screens/ScenarioGame';
 import { TriviaGame } from './screens/TriviaGame';
 import { BadgesScreen } from './screens/Badges';
 import { Register } from './screens/Register';
+import { Login } from './screens/Login';
 import { GameState, Screen, User } from './types';
 import { BADGES, LEVEL_THRESHOLDS } from './constants';
 import { supabase } from './supabaseClient';
-
 export default function App() {
   const [user, setUser] = useState<User | null>(null);
   const [gameState, setGameState] = useState<GameState>({
@@ -20,6 +20,7 @@ export default function App() {
     completedGames: []
   });
   const [currentScreen, setCurrentScreen] = useState<Screen>(Screen.HOME);
+    const [showLogin, setShowLogin] = useState(true);
   const [loading, setLoading] = useState(true);
 
   const getCurrentLevel = (points: number): 1 | 2 | 3 => {
@@ -138,7 +139,9 @@ export default function App() {
     setUser(newUser);
     await loadUserData(newUser.id);
   };
-
+const handleLogin = async (userId: string) => {
+    await loadUserData(userId);
+  };
   const handleLogout = async () => {
     try {
       await supabase.auth.signOut();
@@ -193,8 +196,18 @@ export default function App() {
     );
   }
 
-  if (!user) {
-    return <Register onRegister={handleRegister} />;
+   if (!user) {
+    return showLogin ? (
+      <Login 
+        onLogin={handleLogin} 
+        onSwitchToRegister={() => setShowLogin(false)} 
+      />
+    ) : (
+      <Register 
+        onRegister={handleRegister} 
+        onSwitchToLogin={() => setShowLogin(true)} 
+      />
+    );
   }
 
   return (
