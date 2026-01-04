@@ -1,9 +1,9 @@
-
 import React, { useState } from 'react';
 import { User as UserIcon, Mail, Lock } from 'lucide-react';
 import { Button } from '../components/Button';
 import { User } from '../types';
 import { LOGO_URL } from '../constants';
+import { supabase } from '../supabaseClient';
 
 interface Props {
   onRegister: (user: User) => void;
@@ -16,108 +16,156 @@ export const Register: React.FC<Props> = ({ onRegister }) => {
     password: ''
   });
   const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
     if (!formData.name || !formData.email || !formData.password) {
       setError('Por favor completa todos los campos');
       return;
     }
-    // Simple mock validation/registration logic
-    onRegister({
-      name: formData.name,
-      email: formData.email
-    });
+
+    setLoading(true);
+    setError('');
+
+    try {
+      // Registrar usuario en Supabase Auth
+      const { data: authData, error: authError } = await supabase.auth.signUp({
+        email: formData.email,
+        password: formData.password,
+      });
+
+      if (authError) throw authError;
+      if (!authData.user) throw new Error('No se pudo crear el usuario');
+
+      // Crear perfil del usuario
+      const { error: profileError } = await supabase
+        .from('profiles')
+        .insert([
+          {
+            user_id: authData.user.id,
+            full_name: formData.name,
+            email: formData.email,
+          }
+        ]);
+
+      if (profileError) throw profileError;
+
+      // Crear estado inicial del juego
+      const { error: gameStateError } = await supabase
+        .from('game_state')
+        .insert([
+          {
+            user_id: authData.user.id,
+            points: 0,
+            level: 1,
+            badges: [],
+            completed_games: []
+          }
+        ]);
+
+      if (gameStateError) throw gameStateError;
+
+      // Crear objeto de usuario para la app
+      const newUser: User = {
+        id: authData.user.id,
+        name: formData.name,
+        email: formData.email
+      };
+
+      onRegister(newUser);
+    } catch (err: any) {
+      console.error('Error en registro:', err);
+      setError(err.message || 'Error al registrar usuario');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
-    <div className="min-h-screen bg-white flex flex-col items-center justify-center p-6 max-w-md mx-auto">
-      <div className="text-center mb-8 flex flex-col items-center">
-         {/* Logo Image */}
-         <img 
-            src={LOGO_URL} 
-            alt="BIOFIT" 
-            className="h-16 object-contain mb-4" 
-            onError={(e) => {
-                e.currentTarget.style.display = 'none';
-                e.currentTarget.nextElementSibling?.classList.remove('hidden');
-            }}
-         />
-         {/* Fallback */}
-         <div className="hidden text-4xl font-black text-[#00965E] italic tracking-tighter mb-2">BIOFIT<sup className="text-lg not-italic">®</sup></div>
-         
-         <p className="text-gray-500 font-medium text-lg">BIOTrivia</p>
-      </div>
-
-      <div className="w-full space-y-6">
-        <div className="bg-green-50 p-4 rounded-xl border border-green-100 mb-6">
-          <h2 className="font-bold text-gray-800 text-lg mb-1">Registro de Usuario</h2>
-          <p className="text-sm text-gray-600">Ingresa tus datos para iniciar tu entrenamiento.</p>
+    <div className="min-h-screen bg-gradient-to-br from-green-50 to-green-100 flex items-center justify-center p-4">
+      <div className="bg-white rounded-2xl shadow-xl p-8 w-full max-w-md">
+        <div className="text-center mb-8">
+          <img src={LOGO_URL} alt="BIOFIT Logo" className="h-16 mx-auto mb-4" />
+          <h1 className="text-3xl font-bold biofit-green mb-2">BIOTrivia</h1>
+          <p className="text-gray-600">Ingresa tus datos para iniciar tu entrenamiento.</p>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
-            {error && <p className="text-red-500 text-sm text-center font-medium">{error}</p>}
-            
-            <div className="space-y-2">
-                <label className="text-sm font-bold text-gray-700 ml-1">Nombre Completo</label>
-                <div className="relative">
-                    <UserIcon className="absolute left-3 top-3 text-gray-400" size={20} />
-                    <input 
-                        name="name"
-                        type="text"
-                        placeholder="Ej. Juan Pérez"
-                        value={formData.name}
-                        onChange={handleChange}
-                        className="w-full pl-10 pr-4 py-3 rounded-xl border border-gray-200 focus:border-[#00965E] focus:ring-2 focus:ring-green-100 outline-none transition-all"
-                    />
-                </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Nombre Completo
+            </label>
+            <div className="relative">
+              <UserIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
+              <input
+                type="text"
+                name="name"
+                value={formData.name}
+                onChange={handleChange}
+                className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                placeholder="Ej. Juan Pérez"
+                disabled={loading}
+              />
             </div>
+          </div>
 
-            <div className="space-y-2">
-                <label className="text-sm font-bold text-gray-700 ml-1">Correo Electrónico</label>
-                <div className="relative">
-                    <Mail className="absolute left-3 top-3 text-gray-400" size={20} />
-                    <input 
-                        name="email"
-                        type="email"
-                        placeholder="correo@ejemplo.com"
-                        value={formData.email}
-                        onChange={handleChange}
-                        className="w-full pl-10 pr-4 py-3 rounded-xl border border-gray-200 focus:border-[#00965E] focus:ring-2 focus:ring-green-100 outline-none transition-all"
-                    />
-                </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Correo Electrónico
+            </label>
+            <div className="relative">
+              <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
+              <input
+                type="email"
+                name="email"
+                value={formData.email}
+                onChange={handleChange}
+                className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                placeholder="correo@ejemplo.com"
+                disabled={loading}
+              />
             </div>
+          </div>
 
-            <div className="space-y-2">
-                <label className="text-sm font-bold text-gray-700 ml-1">Clave de Acceso</label>
-                <div className="relative">
-                    <Lock className="absolute left-3 top-3 text-gray-400" size={20} />
-                    <input 
-                        name="password"
-                        type="password"
-                        placeholder="******"
-                        value={formData.password}
-                        onChange={handleChange}
-                        className="w-full pl-10 pr-4 py-3 rounded-xl border border-gray-200 focus:border-[#00965E] focus:ring-2 focus:ring-green-100 outline-none transition-all"
-                    />
-                </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Clave de Acceso
+            </label>
+            <div className="relative">
+              <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
+              <input
+                type="password"
+                name="password"
+                value={formData.password}
+                onChange={handleChange}
+                className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                placeholder="******"
+                disabled={loading}
+              />
             </div>
+          </div>
 
-            <div className="pt-4">
-                <Button type="submit" fullWidth className="shadow-lg shadow-green-200">
-                    Comenzar Entrenamiento
-                </Button>
+          {error && (
+            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
+              {error}
             </div>
+          )}
+
+          <Button 
+            onClick={handleSubmit} 
+            className="w-full py-3 text-lg"
+            disabled={loading}
+          >
+            {loading ? 'Registrando...' : 'Comenzar Entrenamiento'}
+          </Button>
         </form>
       </div>
-      
-      <p className="mt-8 text-xs text-gray-400 text-center">
-        © 2025 PharmaBrand. Uso exclusivo interno.
-      </p>
     </div>
   );
 };
