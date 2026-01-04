@@ -8,9 +8,11 @@ import { TriviaGame } from './screens/TriviaGame';
 import { BadgesScreen } from './screens/Badges';
 import { Register } from './screens/Register';
 import { Login } from './screens/Login';
+import { PrivacyConsent } from './components/PrivacyConsent';
 import { GameState, Screen, User } from './types';
 import { BADGES, LEVEL_THRESHOLDS } from './constants';
 import { supabase } from './supabaseClient';
+
 export default function App() {
   const [user, setUser] = useState<User | null>(null);
   const [gameState, setGameState] = useState<GameState>({
@@ -20,7 +22,8 @@ export default function App() {
     completedGames: []
   });
   const [currentScreen, setCurrentScreen] = useState<Screen>(Screen.HOME);
-    const [showLogin, setShowLogin] = useState(true);
+  const [showLogin, setShowLogin] = useState(true);
+  const [showPrivacyConsent, setShowPrivacyConsent] = useState(false);
   const [loading, setLoading] = useState(true);
 
   const getCurrentLevel = (points: number): 1 | 2 | 3 => {
@@ -80,6 +83,11 @@ export default function App() {
         badges: gameData.badges || [],
         completedGames: gameData.completed_games || []
       });
+
+      // Verificar si necesita aceptar política de privacidad
+      if (!profile.privacy_accepted) {
+        setShowPrivacyConsent(true);
+      }
     } catch (error) {
       console.error('Error loading user data:', error);
     }
@@ -139,9 +147,27 @@ export default function App() {
     setUser(newUser);
     await loadUserData(newUser.id);
   };
-const handleLogin = async (userId: string) => {
+
+  const handleLogin = async (userId: string) => {
     await loadUserData(userId);
   };
+
+  const handlePrivacyAccept = async () => {
+    if (!user) return;
+
+    try {
+      const { error } = await supabase
+        .from('profiles')
+        .update({ privacy_accepted: true })
+        .eq('user_id', user.id);
+
+      if (error) throw error;
+      setShowPrivacyConsent(false);
+    } catch (error) {
+      console.error('Error accepting privacy policy:', error);
+    }
+  };
+
   const handleLogout = async () => {
     try {
       await supabase.auth.signOut();
@@ -196,7 +222,7 @@ const handleLogin = async (userId: string) => {
     );
   }
 
-   if (!user) {
+  if (!user) {
     return showLogin ? (
       <Login 
         onLogin={handleLogin} 
@@ -208,6 +234,11 @@ const handleLogin = async (userId: string) => {
         onSwitchToLogin={() => setShowLogin(true)} 
       />
     );
+  }
+
+  // Mostrar popup de privacidad si es necesario
+  if (user && showPrivacyConsent) {
+    return <PrivacyConsent onAccept={handlePrivacyAccept} />;
   }
 
   return (
