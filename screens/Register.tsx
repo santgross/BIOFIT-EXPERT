@@ -7,8 +7,8 @@ import { supabase } from '../supabaseClient';
 
 interface Props {
   onRegister: (user: User) => void;
+  onSwitchToLogin: () => void;
 }
-
 export const Register: React.FC<Props> = ({ onRegister }) => {
   const [formData, setFormData] = useState({
     name: '',
@@ -164,6 +164,18 @@ export const Register: React.FC<Props> = ({ onRegister }) => {
           >
             {loading ? 'Registrando...' : 'Comenzar Entrenamiento'}
           </Button>
+                    <div className="text-center mt-4">
+            <p className="text-gray-600">
+              ¿Ya tienes cuenta?{' '}
+              <button
+                type="button"
+                onClick={onSwitchToLogin}
+                className="biofit-green font-semibold hover:underline"
+              >
+                Inicia sesión aquí
+              </button>
+            </p>
+          </div>
         </form>
       </div>
     </div>
