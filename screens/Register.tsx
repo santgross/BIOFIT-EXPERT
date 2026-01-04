@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { User as UserIcon, Mail, Lock } from 'lucide-react';
+import { User as UserIcon, Mail, Lock, Phone, Building, Users } from 'lucide-react';
 import { Button } from '../components/Button';
 import { User } from '../types';
 import { LOGO_URL } from '../constants';
@@ -12,8 +12,12 @@ interface Props {
 
 export const Register: React.FC<Props> = ({ onRegister, onSwitchToLogin }) => {
   const [formData, setFormData] = useState({
-    name: '',
+    nombre: '',
+    apellido: '',
     email: '',
+    celular: '',
+    farmacia: '',
+    nombre_visitador: '',
     password: ''
   });
   const [error, setError] = useState('');
@@ -23,11 +27,22 @@ export const Register: React.FC<Props> = ({ onRegister, onSwitchToLogin }) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
+  const validateCelular = (celular: string): boolean => {
+    const celularRegex = /^0[0-9]{9}$/;
+    return celularRegex.test(celular);
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!formData.name || !formData.email || !formData.password) {
+    if (!formData.nombre || !formData.apellido || !formData.email || !formData.celular || 
+        !formData.farmacia || !formData.nombre_visitador || !formData.password) {
       setError('Por favor completa todos los campos');
+      return;
+    }
+
+    if (!validateCelular(formData.celular)) {
+      setError('El celular debe tener 10 dígitos y empezar con 0 (ej: 0985689501)');
       return;
     }
 
@@ -44,14 +59,18 @@ export const Register: React.FC<Props> = ({ onRegister, onSwitchToLogin }) => {
       if (authError) throw authError;
       if (!authData.user) throw new Error('No se pudo crear el usuario');
 
-      // Crear perfil del usuario
+      // Crear perfil del usuario con todos los datos
       const { error: profileError } = await supabase
         .from('profiles')
         .insert([
           {
             user_id: authData.user.id,
-            full_name: formData.name,
+            full_name: `${formData.nombre} ${formData.apellido}`,
             email: formData.email,
+            apellido: formData.apellido,
+            celular: formData.celular,
+            farmacia: formData.farmacia,
+            nombre_visitador: formData.nombre_visitador,
           }
         ]);
 
@@ -75,7 +94,7 @@ export const Register: React.FC<Props> = ({ onRegister, onSwitchToLogin }) => {
       // Crear objeto de usuario para la app
       const newUser: User = {
         id: authData.user.id,
-        name: formData.name,
+        name: `${formData.nombre} ${formData.apellido}`,
         email: formData.email
       };
 
@@ -94,23 +113,41 @@ export const Register: React.FC<Props> = ({ onRegister, onSwitchToLogin }) => {
         <div className="text-center mb-8">
           <img src={LOGO_URL} alt="BIOFIT Logo" className="h-16 mx-auto mb-4" />
           <h1 className="text-3xl font-bold biofit-green mb-2">BIOTrivia</h1>
-          <p className="text-gray-600">Ingresa tus datos para iniciar tu entrenamiento.</p>
+          <p className="text-gray-600">Registro de Dependientes de Farmacia</p>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Nombre Completo
+              Nombre
             </label>
             <div className="relative">
               <UserIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
               <input
                 type="text"
-                name="name"
-                value={formData.name}
+                name="nombre"
+                value={formData.nombre}
                 onChange={handleChange}
                 className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                placeholder="Ej. Juan Pérez"
+                placeholder="Ej. Juan"
+                disabled={loading}
+              />
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Apellido
+            </label>
+            <div className="relative">
+              <UserIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
+              <input
+                type="text"
+                name="apellido"
+                value={formData.apellido}
+                onChange={handleChange}
+                className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                placeholder="Ej. Pérez"
                 disabled={loading}
               />
             </div>
@@ -136,7 +173,62 @@ export const Register: React.FC<Props> = ({ onRegister, onSwitchToLogin }) => {
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Clave de Acceso
+              Celular
+            </label>
+            <div className="relative">
+              <Phone className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
+              <input
+                type="tel"
+                name="celular"
+                value={formData.celular}
+                onChange={handleChange}
+                className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                placeholder="0985689501"
+                maxLength={10}
+                disabled={loading}
+              />
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Farmacia
+            </label>
+            <div className="relative">
+              <Building className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
+              <input
+                type="text"
+                name="farmacia"
+                value={formData.farmacia}
+                onChange={handleChange}
+                className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                placeholder="Ej. Farmacia Cruz Azul"
+                disabled={loading}
+              />
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Nombre del Visitador
+            </label>
+            <div className="relative">
+              <Users className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
+              <input
+                type="text"
+                name="nombre_visitador"
+                value={formData.nombre_visitador}
+                onChange={handleChange}
+                className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                placeholder="Ej. María González"
+                disabled={loading}
+              />
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Contraseña
             </label>
             <div className="relative">
               <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
@@ -146,7 +238,7 @@ export const Register: React.FC<Props> = ({ onRegister, onSwitchToLogin }) => {
                 value={formData.password}
                 onChange={handleChange}
                 className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                placeholder="******"
+                placeholder="Mínimo 6 caracteres"
                 disabled={loading}
               />
             </div>
