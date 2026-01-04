@@ -1,7 +1,7 @@
 
 import { Badge, MatchItem, QuestionTF, Scenario, TriviaQuestion } from "./types";
 
-export const LOGO_URL = "https://biofit.com.ec/wp-content/uploads/2021/06/logo-biofit-1.png";
+export const LOGO_URL = '/LOGO-BIOFIT-SIN-FONDO.png';
 
 export const BRAND_COLORS = {
   primary: '#00965E',
