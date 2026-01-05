@@ -204,12 +204,15 @@ export default function App() {
   const renderScreen = () => {
     switch (currentScreen) {
       case Screen.HOME:
-       return <Home 
-                onNavigate={setCurrentScreen} 
-                unlockedBadges={gameState.badges} 
-                completedGames={gameState.completedGames} 
-                user={user} isAdmin={isAdmin} 
-                />;
+        return (
+          <Home 
+            onNavigate={setCurrentScreen} 
+            unlockedBadges={gameState.badges} 
+            completedGames={gameState.completedGames}
+            user={user} 
+            isAdmin={isAdmin} 
+          />
+        );
       case Screen.TRUE_FALSE:
         return <TrueFalseGame level={userLevel} onComplete={handleGameComplete} />;
       case Screen.MATCH:
@@ -223,7 +226,15 @@ export default function App() {
       case Screen.ADMIN:
         return <AdminDashboard onBack={() => setCurrentScreen(Screen.HOME)} />;
       default:
-        return <Home onNavigate={setCurrentScreen} unlockedBadges={gameState.badges} user={user} isAdmin={isAdmin} />;
+        return (
+          <Home 
+            onNavigate={setCurrentScreen} 
+            unlockedBadges={gameState.badges} 
+            completedGames={gameState.completedGames}
+            user={user} 
+            isAdmin={isAdmin} 
+          />
+        );
     }
   };
 
