@@ -1,4 +1,3 @@
-
 import { Badge, MatchItem, QuestionTF, Scenario, TriviaQuestion } from "./types";
 
 export const LOGO_URL = '/LOGO-BIOFIT-SIN-FONDO.png';
@@ -13,10 +12,10 @@ export const BRAND_COLORS = {
 };
 
 export const LEVEL_THRESHOLDS = {
-  PRINCIPIANTE: 0,      // Mes 1-2
-  AVANZADO: 400,        // Mes 3-4
-  EXPERTO: 800,         // Mes 5-6
-  MAESTRO: 1200,        // Graduación
+  PRINCIPIANTE: 0,
+  AVANZADO: 400,
+  EXPERTO: 800,
+  MAESTRO: 1200,
 };
 
 export const BADGES: Badge[] = [
@@ -50,31 +49,31 @@ const TF_LEVEL_3: QuestionTF[] = [
 
 /* --- MATCHING GAMES --- */
 const MATCH_LEVEL_1: MatchItem[] = [
-  { id: '1a', text: 'PVP BIOFIT', type: 'benefit', matchId: '1b' },
-  { id: '1b', text: '$15.90', type: 'system', matchId: '1a' },
-  { id: '2a', text: 'PVP Competencia (Rowe)', type: 'benefit', matchId: '2b' },
-  { id: '2b', text: '$17.50', type: 'system', matchId: '2a' },
-  { id: '3a', text: 'Aceptación Sabor', type: 'benefit', matchId: '3b' },
-  { id: '3b', text: '97% de evaluadores', type: 'system', matchId: '3a' },
-  { id: '4a', text: 'Disolución Superior', type: 'benefit', matchId: '4b' },
-  { id: '4b', text: '98% de éxito', type: 'system', matchId: '4a' }
+  { id: 'match1-1a', text: 'PVP BIOFIT', type: 'benefit', matchId: 'match1-1b' },
+  { id: 'match1-1b', text: '$15.90', type: 'system', matchId: 'match1-1a' },
+  { id: 'match1-2a', text: 'PVP Competencia (Rowe)', type: 'benefit', matchId: 'match1-2b' },
+  { id: 'match1-2b', text: '$17.50', type: 'system', matchId: 'match1-2a' },
+  { id: 'match1-3a', text: 'Aceptación Sabor', type: 'benefit', matchId: 'match1-3b' },
+  { id: 'match1-3b', text: '97% de evaluadores', type: 'system', matchId: 'match1-3a' },
+  { id: 'match1-4a', text: 'Disolución Superior', type: 'benefit', matchId: 'match1-4b' },
+  { id: 'match1-4b', text: '98% de éxito', type: 'system', matchId: 'match1-4a' }
 ];
 
 const MATCH_LEVEL_2: MatchItem[] = [
-  { id: '5a', text: 'Frutas diarias', type: 'benefit', matchId: '5b' },
-  { id: '5b', text: '3 piezas enteras', type: 'system', matchId: '5a' },
-  { id: '6a', text: 'Verduras diarias', type: 'benefit', matchId: '6b' },
-  { id: '6b', text: '2 raciones', type: 'system', matchId: '6a' },
-  { id: '7a', text: 'Cereales diarios', type: 'benefit', matchId: '7b' },
-  { id: '7b', text: '4 a 6 raciones', type: 'system', matchId: '7a' },
-  { id: '8a', text: 'Hidratación', type: 'benefit', matchId: '8b' },
-  { id: '8b', text: '1.5 a 2 litros', type: 'system', matchId: '8a' }
+  { id: 'match2-5a', text: 'Frutas diarias', type: 'benefit', matchId: 'match2-5b' },
+  { id: 'match2-5b', text: '3 piezas enteras', type: 'system', matchId: 'match2-5a' },
+  { id: 'match2-6a', text: 'Verduras diarias', type: 'benefit', matchId: 'match2-6b' },
+  { id: 'match2-6b', text: '2 raciones', type: 'system', matchId: 'match2-6a' },
+  { id: 'match2-7a', text: 'Cereales diarios', type: 'benefit', matchId: 'match2-7b' },
+  { id: 'match2-7b', text: '4 a 6 raciones', type: 'system', matchId: 'match2-7a' },
+  { id: 'match2-8a', text: 'Hidratación', type: 'benefit', matchId: 'match2-8b' },
+  { id: 'match2-8b', text: '1.5 a 2 litros', type: 'system', matchId: 'match2-8a' }
 ];
 
 /* --- SCENARIOS (CASOS DE MOSTRADOR) --- */
 const SCENARIO_LEVEL_2: Scenario[] = [
   {
-    id: 201,
+    id: 'scenario2-1',
     customer: "¿BIOFIT tiene el mismo efecto si lo mezclo con jugo en lugar de agua?",
     clerkResponse: "Sí, puede mezclarlo con agua o jugos naturales, siempre bebiéndolo de inmediato para evitar que espese.",
     isCorrect: true,
@@ -82,7 +81,7 @@ const SCENARIO_LEVEL_2: Scenario[] = [
     feedback: "¡Correcto! BIOFIT es versátil en su administración."
   },
   {
-    id: 202,
+    id: 'scenario2-2',
     customer: "Mi doctor me dijo que coma fibra pero me da muchos gases. ¿BIOFIT me hará lo mismo?",
     clerkResponse: "BIOFIT tiene una pureza y disolución superior que minimiza la fermentación excesiva y gases comparado con otras fibras.",
     isCorrect: true,
@@ -90,7 +89,7 @@ const SCENARIO_LEVEL_2: Scenario[] = [
     feedback: "Muy bien. La calidad del Psyllium influye directamente en la tolerancia."
   },
   {
-    id: 203,
+    id: 'scenario2-3',
     customer: "¿BIOFIT sirve para limpiar el colon antes de una cirugía?",
     clerkResponse: "No, BIOFIT es para el manejo del estreñimiento y salud metabólica, no es un preparador quirúrgico fuerte.",
     isCorrect: true,
@@ -98,7 +97,7 @@ const SCENARIO_LEVEL_2: Scenario[] = [
     feedback: "Correcto. Hay que diferenciar entre suplementos de fibra y laxantes osmóticos de choque."
   },
   {
-    id: 204,
+    id: 'scenario2-4',
     customer: "Busco algo para mi papá de 80 años, le cuesta mucho tragar polvos con grumos.",
     clerkResponse: "BIOFIT es ideal para él por su textura homogénea sin grumos, lo que facilita la deglución en adultos mayores.",
     isCorrect: true,
@@ -109,7 +108,7 @@ const SCENARIO_LEVEL_2: Scenario[] = [
 
 const SCENARIO_LEVEL_3: Scenario[] = [
   {
-    id: 301,
+    id: 'scenario3-1',
     customer: "Estoy embarazada y tengo mucho estreñimiento. ¿Puedo tomar BIOFIT?",
     clerkResponse: "El Psyllium es de acción mecánica y segura, pero siempre consulte a su ginecólogo antes de iniciar cualquier producto.",
     isCorrect: true,
@@ -117,7 +116,7 @@ const SCENARIO_LEVEL_3: Scenario[] = [
     feedback: "Correcto. Aunque es seguro, el protocolo ético es referir a consulta profesional en embarazo."
   },
   {
-    id: 302,
+    id: 'scenario3-2',
     customer: "¿Por qué el estudio de Anderson es importante para mi colesterol?",
     clerkResponse: "Porque demostró que BIOFIT reduce el LDL un 6.7% sin efectos secundarios, siendo un gran apoyo a su dieta.",
     isCorrect: true,
@@ -125,7 +124,7 @@ const SCENARIO_LEVEL_3: Scenario[] = [
     feedback: "¡Respuesta experta! Citar la evidencia clínica convence a pacientes informados."
   },
   {
-    id: 303,
+    id: 'scenario3-3',
     customer: "Si tomo BIOFIT, ¿puedo dejar de tomar mi pastilla para la diabetes?",
     clerkResponse: "No, BIOFIT ayuda a controlar la glucosa (estudio Cicero), pero jamás debe suspender su tratamiento médico sin autorización del doctor.",
     isCorrect: true,
@@ -136,24 +135,24 @@ const SCENARIO_LEVEL_3: Scenario[] = [
 
 /* --- TRIVIA QUESTIONS --- */
 const TRIVIA_LEVEL_1: TriviaQuestion[] = [
-  { id: 11, question: "¿Cuál es la dosis recomendada para adultos?", options: ["1 cucharada 1 a 3 veces al día", "1 sachet a la semana", "Toda la lata en 3 días"], correctIndex: 0 },
-  { id: 12, question: "¿Qué sucede si esperas mucho para tomar BIOFIT tras mezclarlo?", options: ["Se evapora", "Se vuelve una masa gelatinosa difícil de tragar", "Cambia de color a azul"], correctIndex: 1 },
-  { id: 13, question: "BIOFIT es apto para diabéticos por ser endulzado con:", options: ["Miel", "Azúcar morena", "Sucralosa"], correctIndex: 2 },
-  { id: 14, question: "¿En cuántos sabores viene BIOFIT?", options: ["1 (Original)", "2 (Fresa y Naranja)", "3 (Fresa, Naranja y Original)"], correctIndex: 2 }
+  { id: 'trivia1-1', question: "¿Cuál es la dosis recomendada para adultos?", options: ["1 cucharada 1 a 3 veces al día", "1 sachet a la semana", "Toda la lata en 3 días"], correctIndex: 0 },
+  { id: 'trivia1-2', question: "¿Qué sucede si esperas mucho para tomar BIOFIT tras mezclarlo?", options: ["Se evapora", "Se vuelve una masa gelatinosa difícil de tragar", "Cambia de color a azul"], correctIndex: 1 },
+  { id: 'trivia1-3', question: "BIOFIT es apto para diabéticos por ser endulzado con:", options: ["Miel", "Azúcar morena", "Sucralosa"], correctIndex: 2 },
+  { id: 'trivia1-4', question: "¿En cuántos sabores viene BIOFIT?", options: ["1 (Original)", "2 (Fresa y Naranja)", "3 (Fresa, Naranja y Original)"], correctIndex: 2 }
 ];
 
 const TRIVIA_LEVEL_2: TriviaQuestion[] = [
-  { id: 21, question: "¿Qué beneficio extra ofrece la fibra insoluble según la FEAD?", options: ["Aumenta masa fecal y frecuencia", "Aclara la piel", "Quita el sueño"], correctIndex: 0 },
-  { id: 22, question: "Para educar el intestino, se recomienda ir al baño:", options: ["Solo cuando haya urgencia", "A la misma hora todos los días", "Cada 3 días"], correctIndex: 1 },
-  { id: 23, question: "¿Cuál es la postura recomendada para facilitar la deposición?", options: ["De pie", "Sentado normal", "Rodillas próximas al pecho (con banqueta)"], correctIndex: 2 },
-  { id: 24, question: "Una ración individual de legumbres equivale a unos:", options: ["10 gramos", "60 gramos en crudo", "1 kilogramo"], correctIndex: 1 }
+  { id: 'trivia2-1', question: "¿Qué beneficio extra ofrece la fibra insoluble según la FEAD?", options: ["Aumenta masa fecal y frecuencia", "Aclara la piel", "Quita el sueño"], correctIndex: 0 },
+  { id: 'trivia2-2', question: "Para educar el intestino, se recomienda ir al baño:", options: ["Solo cuando haya urgencia", "A la misma hora todos los días", "Cada 3 días"], correctIndex: 1 },
+  { id: 'trivia2-3', question: "¿Cuál es la postura recomendada para facilitar la deposición?", options: ["De pie", "Sentado normal", "Rodillas próximas al pecho (con banqueta)"], correctIndex: 2 },
+  { id: 'trivia2-4', question: "Una ración individual de legumbres equivale a unos:", options: ["10 gramos", "60 gramos en crudo", "1 kilogramo"], correctIndex: 1 }
 ];
 
 const TRIVIA_LEVEL_3: TriviaQuestion[] = [
-  { id: 31, question: "En el estudio de Cicero, ¿cuánto bajó la glucemia en ayunas?", options: ["-2%", "-18%", "-50%"], correctIndex: 1 },
-  { id: 32, question: "¿Qué porcentaje de reducción de insulina mostró el grupo Psyllium?", options: ["-17%", "-5%", "0%"], correctIndex: 0 },
-  { id: 33, question: "¿Cuánto tiempo duró el estudio de Anderson para colesterol?", options: ["2 semanas", "1 mes", "26 semanas"], correctIndex: 2 },
-  { id: 34, question: "Según el estudio de Brum, ¿cuántas horas dura la sensación de saciedad?", options: ["1 hora", "4 horas", "12 horas"], correctIndex: 1 }
+  { id: 'trivia3-1', question: "En el estudio de Cicero, ¿cuánto bajó la glucemia en ayunas?", options: ["-2%", "-18%", "-50%"], correctIndex: 1 },
+  { id: 'trivia3-2', question: "¿Qué porcentaje de reducción de insulina mostró el grupo Psyllium?", options: ["-17%", "-5%", "0%"], correctIndex: 0 },
+  { id: 'trivia3-3', question: "¿Cuánto tiempo duró el estudio de Anderson para colesterol?", options: ["2 semanas", "1 mes", "26 semanas"], correctIndex: 2 },
+  { id: 'trivia3-4', question: "Según el estudio de Brum, ¿cuántas horas dura la sensación de saciedad?", options: ["1 hora", "4 horas", "12 horas"], correctIndex: 1 }
 ];
 
 export const DATA_BY_LEVEL = {
@@ -161,4 +160,23 @@ export const DATA_BY_LEVEL = {
   MATCH: { 1: MATCH_LEVEL_1, 2: MATCH_LEVEL_2, 3: [] },
   SCENARIO: { 1: [], 2: SCENARIO_LEVEL_2, 3: SCENARIO_LEVEL_3 },
   TRIVIA: { 1: TRIVIA_LEVEL_1, 2: TRIVIA_LEVEL_2, 3: TRIVIA_LEVEL_3 }
+};
+
+// IDs únicos por módulo para tracking
+export const GAME_IDS = {
+  MATCH: {
+    1: 'match-level-1',
+    2: 'match-level-2',
+    3: 'match-level-3'
+  },
+  SCENARIO: {
+    1: 'scenario-level-1',
+    2: 'scenario-level-2',
+    3: 'scenario-level-3'
+  },
+  TRIVIA: {
+    1: 'trivia-level-1',
+    2: 'trivia-level-2',
+    3: 'trivia-level-3'
+  }
 };
