@@ -141,7 +141,17 @@ export const TrueFalseGame: React.FC<Props> = ({ level, onComplete }) => {
       const newAvailable = availableQuestions.filter((_, idx) => idx !== currentQuestionIndex);
       setAvailableQuestions(newAvailable);
 
-      if (newAvailable.length === 0) {
+      // Verificar si completó TODAS las preguntas del nivel
+      const allQuestionsForLevel = QUESTIONS.filter(q => q.level <= level);
+      const allCompleted = allQuestionsForLevel.every(q => newCompleted.includes(q.id));
+
+      if (allCompleted) {
+        // Marcar el módulo completo como finalizado
+        await markModuleComplete(newCompleted);
+        setGameFinished(true);
+        setShowCelebration(true);
+      } else if (newAvailable.length === 0) {
+        // Ya no hay más preguntas disponibles en esta sesión
         setGameFinished(true);
         setShowCelebration(true);
       } else {
@@ -156,11 +166,34 @@ export const TrueFalseGame: React.FC<Props> = ({ level, onComplete }) => {
     }
   };
 
+  const markModuleComplete = async (currentCompleted: string[]) => {
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) return;
+
+      // Agregar el ID del módulo completo si no existe
+      const moduleId = 'true-false-complete';
+      if (!currentCompleted.includes(moduleId)) {
+        const withModule = [...currentCompleted, moduleId];
+        
+        await supabase
+          .from('game_state')
+          .update({ completed_games: withModule })
+          .eq('user_id', session.user.id);
+      }
+    } catch (error) {
+      console.error('Error marking module complete:', error);
+    }
+  };
+
   const handleFinish = () => {
     onComplete(score);
   };
 
   if (gameFinished) {
+    const allQuestionsForLevel = QUESTIONS.filter(q => q.level <= level);
+    const allCompleted = allQuestionsForLevel.every(q => completedIds.includes(q.id));
+
     return (
       <div className="min-h-screen bg-gradient-to-br from-green-50 via-blue-50 to-purple-50 flex items-center justify-center p-4 relative overflow-hidden">
         {/* Animated Background Elements */}
@@ -207,10 +240,13 @@ export const TrueFalseGame: React.FC<Props> = ({ level, onComplete }) => {
           </div>
           
           <h2 className="text-4xl font-bold bg-gradient-to-r from-green-600 to-blue-600 bg-clip-text text-transparent mb-2">
-            ¡Felicidades!
+            {allCompleted ? '¡Módulo Completado!' : '¡Buen Trabajo!'}
           </h2>
           <p className="text-xl text-gray-600 mb-6">
-            Has completado el módulo
+            {allCompleted 
+              ? 'Has completado todas las preguntas del módulo' 
+              : 'Sigue practicando para completar el módulo'
+            }
           </p>
           
           <div className="bg-gradient-to-br from-green-50 to-blue-50 rounded-2xl p-6 mb-6 border-2 border-green-200">
@@ -224,8 +260,16 @@ export const TrueFalseGame: React.FC<Props> = ({ level, onComplete }) => {
           <div className="space-y-2 mb-6">
             <div className="flex items-center justify-center text-green-600">
               <CheckCircle size={20} className="mr-2" />
-              <span className="font-semibold">Módulo Completado</span>
+              <span className="font-semibold">
+                {completedIds.filter(id => QUESTIONS.some(q => q.id === id)).length} de {allQuestionsForLevel.length} preguntas completadas
+              </span>
             </div>
+            {allCompleted && (
+              <div className="flex items-center justify-center text-green-600">
+                <CheckCircle size={20} className="mr-2" />
+                <span className="font-semibold">Módulo Completado ✓</span>
+              </div>
+            )}
           </div>
 
           <Button onClick={handleFinish} className="w-full py-4 text-lg shadow-lg hover:shadow-xl transition-all">
@@ -270,7 +314,8 @@ export const TrueFalseGame: React.FC<Props> = ({ level, onComplete }) => {
   }
 
   const currentQuestion = availableQuestions[currentQuestionIndex];
-  const progress = ((completedIds.length) / QUESTIONS.filter(q => q.level <= level).length) * 100;
+  const allQuestionsForLevel = QUESTIONS.filter(q => q.level <= level);
+  const progress = ((completedIds.filter(id => QUESTIONS.some(q => q.id === id)).length) / allQuestionsForLevel.length) * 100;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-blue-100 p-4">
@@ -288,7 +333,7 @@ export const TrueFalseGame: React.FC<Props> = ({ level, onComplete }) => {
             />
           </div>
           <p className="text-xs text-gray-500 mt-2">
-            {completedIds.length} de {QUESTIONS.filter(q => q.level <= level).length} completadas
+            {completedIds.filter(id => QUESTIONS.some(q => q.id === id)).length} de {allQuestionsForLevel.length} completadas
           </p>
         </div>
 
