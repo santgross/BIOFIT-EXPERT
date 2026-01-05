@@ -73,7 +73,7 @@ const MATCH_LEVEL_2: MatchItem[] = [
 /* --- SCENARIOS (CASOS DE MOSTRADOR) --- */
 const SCENARIO_LEVEL_2: Scenario[] = [
   {
-    id: 'scenario2-1',
+    id: 221,
     customer: "¿BIOFIT tiene el mismo efecto si lo mezclo con jugo en lugar de agua?",
     clerkResponse: "Sí, puede mezclarlo con agua o jugos naturales, siempre bebiéndolo de inmediato para evitar que espese.",
     isCorrect: true,
@@ -81,7 +81,7 @@ const SCENARIO_LEVEL_2: Scenario[] = [
     feedback: "¡Correcto! BIOFIT es versátil en su administración."
   },
   {
-    id: 'scenario2-2',
+    id: 222,
     customer: "Mi doctor me dijo que coma fibra pero me da muchos gases. ¿BIOFIT me hará lo mismo?",
     clerkResponse: "BIOFIT tiene una pureza y disolución superior que minimiza la fermentación excesiva y gases comparado con otras fibras.",
     isCorrect: true,
@@ -89,7 +89,7 @@ const SCENARIO_LEVEL_2: Scenario[] = [
     feedback: "Muy bien. La calidad del Psyllium influye directamente en la tolerancia."
   },
   {
-    id: 'scenario2-3',
+    id: 223,
     customer: "¿BIOFIT sirve para limpiar el colon antes de una cirugía?",
     clerkResponse: "No, BIOFIT es para el manejo del estreñimiento y salud metabólica, no es un preparador quirúrgico fuerte.",
     isCorrect: true,
@@ -97,7 +97,7 @@ const SCENARIO_LEVEL_2: Scenario[] = [
     feedback: "Correcto. Hay que diferenciar entre suplementos de fibra y laxantes osmóticos de choque."
   },
   {
-    id: 'scenario2-4',
+    id: 224,
     customer: "Busco algo para mi papá de 80 años, le cuesta mucho tragar polvos con grumos.",
     clerkResponse: "BIOFIT es ideal para él por su textura homogénea sin grumos, lo que facilita la deglución en adultos mayores.",
     isCorrect: true,
@@ -108,7 +108,7 @@ const SCENARIO_LEVEL_2: Scenario[] = [
 
 const SCENARIO_LEVEL_3: Scenario[] = [
   {
-    id: 'scenario3-1',
+    id: 331,
     customer: "Estoy embarazada y tengo mucho estreñimiento. ¿Puedo tomar BIOFIT?",
     clerkResponse: "El Psyllium es de acción mecánica y segura, pero siempre consulte a su ginecólogo antes de iniciar cualquier producto.",
     isCorrect: true,
@@ -116,7 +116,7 @@ const SCENARIO_LEVEL_3: Scenario[] = [
     feedback: "Correcto. Aunque es seguro, el protocolo ético es referir a consulta profesional en embarazo."
   },
   {
-    id: 'scenario3-2',
+    id: 332,
     customer: "¿Por qué el estudio de Anderson es importante para mi colesterol?",
     clerkResponse: "Porque demostró que BIOFIT reduce el LDL un 6.7% sin efectos secundarios, siendo un gran apoyo a su dieta.",
     isCorrect: true,
@@ -124,7 +124,7 @@ const SCENARIO_LEVEL_3: Scenario[] = [
     feedback: "¡Respuesta experta! Citar la evidencia clínica convence a pacientes informados."
   },
   {
-    id: 'scenario3-3',
+    id: 333,
     customer: "Si tomo BIOFIT, ¿puedo dejar de tomar mi pastilla para la diabetes?",
     clerkResponse: "No, BIOFIT ayuda a controlar la glucosa (estudio Cicero), pero jamás debe suspender su tratamiento médico sin autorización del doctor.",
     isCorrect: true,
@@ -135,24 +135,24 @@ const SCENARIO_LEVEL_3: Scenario[] = [
 
 /* --- TRIVIA QUESTIONS --- */
 const TRIVIA_LEVEL_1: TriviaQuestion[] = [
-  { id: 'trivia1-1', question: "¿Cuál es la dosis recomendada para adultos?", options: ["1 cucharada 1 a 3 veces al día", "1 sachet a la semana", "Toda la lata en 3 días"], correctIndex: 0 },
-  { id: 'trivia1-2', question: "¿Qué sucede si esperas mucho para tomar BIOFIT tras mezclarlo?", options: ["Se evapora", "Se vuelve una masa gelatinosa difícil de tragar", "Cambia de color a azul"], correctIndex: 1 },
-  { id: 'trivia1-3', question: "BIOFIT es apto para diabéticos por ser endulzado con:", options: ["Miel", "Azúcar morena", "Sucralosa"], correctIndex: 2 },
-  { id: 'trivia1-4', question: "¿En cuántos sabores viene BIOFIT?", options: ["1 (Original)", "2 (Fresa y Naranja)", "3 (Fresa, Naranja y Original)"], correctIndex: 2 }
+  { id: 411, question: "¿Cuál es la dosis recomendada para adultos?", options: ["1 cucharada 1 a 3 veces al día", "1 sachet a la semana", "Toda la lata en 3 días"], correctIndex: 0 },
+  { id: 412, question: "¿Qué sucede si esperas mucho para tomar BIOFIT tras mezclarlo?", options: ["Se evapora", "Se vuelve una masa gelatinosa difícil de tragar", "Cambia de color a azul"], correctIndex: 1 },
+  { id: 413, question: "BIOFIT es apto para diabéticos por ser endulzado con:", options: ["Miel", "Azúcar morena", "Sucralosa"], correctIndex: 2 },
+  { id: 414, question: "¿En cuántos sabores viene BIOFIT?", options: ["1 (Original)", "2 (Fresa y Naranja)", "3 (Fresa, Naranja y Original)"], correctIndex: 2 }
 ];
 
 const TRIVIA_LEVEL_2: TriviaQuestion[] = [
-  { id: 'trivia2-1', question: "¿Qué beneficio extra ofrece la fibra insoluble según la FEAD?", options: ["Aumenta masa fecal y frecuencia", "Aclara la piel", "Quita el sueño"], correctIndex: 0 },
-  { id: 'trivia2-2', question: "Para educar el intestino, se recomienda ir al baño:", options: ["Solo cuando haya urgencia", "A la misma hora todos los días", "Cada 3 días"], correctIndex: 1 },
-  { id: 'trivia2-3', question: "¿Cuál es la postura recomendada para facilitar la deposición?", options: ["De pie", "Sentado normal", "Rodillas próximas al pecho (con banqueta)"], correctIndex: 2 },
-  { id: 'trivia2-4', question: "Una ración individual de legumbres equivale a unos:", options: ["10 gramos", "60 gramos en crudo", "1 kilogramo"], correctIndex: 1 }
+  { id: 421, question: "¿Qué beneficio extra ofrece la fibra insoluble según la FEAD?", options: ["Aumenta masa fecal y frecuencia", "Aclara la piel", "Quita el sueño"], correctIndex: 0 },
+  { id: 422, question: "Para educar el intestino, se recomienda ir al baño:", options: ["Solo cuando haya urgencia", "A la misma hora todos los días", "Cada 3 días"], correctIndex: 1 },
+  { id: 423, question: "¿Cuál es la postura recomendada para facilitar la deposición?", options: ["De pie", "Sentado normal", "Rodillas próximas al pecho (con banqueta)"], correctIndex: 2 },
+  { id: 424, question: "Una ración individual de legumbres equivale a unos:", options: ["10 gramos", "60 gramos en crudo", "1 kilogramo"], correctIndex: 1 }
 ];
 
 const TRIVIA_LEVEL_3: TriviaQuestion[] = [
-  { id: 'trivia3-1', question: "En el estudio de Cicero, ¿cuánto bajó la glucemia en ayunas?", options: ["-2%", "-18%", "-50%"], correctIndex: 1 },
-  { id: 'trivia3-2', question: "¿Qué porcentaje de reducción de insulina mostró el grupo Psyllium?", options: ["-17%", "-5%", "0%"], correctIndex: 0 },
-  { id: 'trivia3-3', question: "¿Cuánto tiempo duró el estudio de Anderson para colesterol?", options: ["2 semanas", "1 mes", "26 semanas"], correctIndex: 2 },
-  { id: 'trivia3-4', question: "Según el estudio de Brum, ¿cuántas horas dura la sensación de saciedad?", options: ["1 hora", "4 horas", "12 horas"], correctIndex: 1 }
+  { id: 431, question: "En el estudio de Cicero, ¿cuánto bajó la glucemia en ayunas?", options: ["-2%", "-18%", "-50%"], correctIndex: 1 },
+  { id: 432, question: "¿Qué porcentaje de reducción de insulina mostró el grupo Psyllium?", options: ["-17%", "-5%", "0%"], correctIndex: 0 },
+  { id: 433, question: "¿Cuánto tiempo duró el estudio de Anderson para colesterol?", options: ["2 semanas", "1 mes", "26 semanas"], correctIndex: 2 },
+  { id: 434, question: "Según el estudio de Brum, ¿cuántas horas dura la sensación de saciedad?", options: ["1 hora", "4 horas", "12 horas"], correctIndex: 1 }
 ];
 
 export const DATA_BY_LEVEL = {
@@ -162,7 +162,7 @@ export const DATA_BY_LEVEL = {
   TRIVIA: { 1: TRIVIA_LEVEL_1, 2: TRIVIA_LEVEL_2, 3: TRIVIA_LEVEL_3 }
 };
 
-// IDs únicos por módulo para tracking
+// IDs únicos por nivel para tracking de juegos completos
 export const GAME_IDS = {
   MATCH: {
     1: 'match-level-1',
