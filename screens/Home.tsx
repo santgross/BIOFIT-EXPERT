@@ -1,7 +1,7 @@
-
 import React from 'react';
 import { Screen, User } from '../types';
 import { LOGO_URL } from '../constants';
+import { CheckCircle, Lock } from 'lucide-react';
 
 interface Props {
   onNavigate: (screen: Screen) => void;
@@ -18,7 +18,8 @@ export const Home: React.FC<Props> = ({ onNavigate, unlockedBadges, user, isAdmi
       description: 'Mitos y Realidades BIOFIT',
       icon: '✓',
       color: 'from-blue-500 to-blue-600',
-      available: true
+      available: true,
+      totalQuestions: 6
     },
     {
       id: Screen.MATCH,
@@ -26,7 +27,8 @@ export const Home: React.FC<Props> = ({ onNavigate, unlockedBadges, user, isAdmi
       description: 'Precio, Beneficios y Acción',
       icon: '⚡',
       color: 'from-orange-500 to-orange-600',
-      available: true
+      available: true,
+      totalQuestions: 8
     },
     {
       id: Screen.SCENARIO,
@@ -34,7 +36,8 @@ export const Home: React.FC<Props> = ({ onNavigate, unlockedBadges, user, isAdmi
       description: 'Simulación de Venta',
       icon: '⚠',
       color: 'from-red-500 to-red-600',
-      available: true
+      available: true,
+      totalQuestions: 5
     },
     {
       id: Screen.TRIVIA,
@@ -42,9 +45,28 @@ export const Home: React.FC<Props> = ({ onNavigate, unlockedBadges, user, isAdmi
       description: 'Conocimiento General',
       icon: '🎯',
       color: 'from-purple-500 to-purple-600',
-      available: unlockedBadges.includes('trivia-master')
+      available: unlockedBadges.includes('trivia-master'),
+      totalQuestions: 10
     }
   ];
+
+  // Función para verificar si un módulo está completado
+  const isModuleCompleted = (gameId: Screen, totalQuestions: number) => {
+    // Por ahora solo verificamos Verdadero o Falso
+    // Puedes expandir esto cuando implementes los otros módulos
+    if (gameId === Screen.TRUE_FALSE) {
+      const completedTF = unlockedBadges.filter(b => b.startsWith('tf')).length;
+      return completedTF >= totalQuestions;
+    }
+    return false;
+  };
+
+  const getCompletedCount = (gameId: Screen) => {
+    if (gameId === Screen.TRUE_FALSE) {
+      return unlockedBadges.filter(b => b.startsWith('tf')).length;
+    }
+    return 0;
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-green-50 to-green-100">
@@ -64,47 +86,90 @@ export const Home: React.FC<Props> = ({ onNavigate, unlockedBadges, user, isAdmi
         <div className="mb-8">
           <h2 className="text-2xl font-bold biofit-green mb-4">Módulos de Entrenamiento</h2>
           <div className="grid gap-4">
-            {games.map((game) => (
-              <button
-                key={game.id}
-                onClick={() => game.available && onNavigate(game.id)}
-                disabled={!game.available}
-                className={`
-                  bg-white rounded-xl shadow-md p-6 text-left transition-all duration-200
-                  ${game.available 
-                    ? 'hover:shadow-xl hover:scale-105 cursor-pointer' 
-                    : 'opacity-50 cursor-not-allowed'
-                  }
-                `}
-              >
-                <div className="flex items-center">
-                  <div className={`
-                    w-16 h-16 rounded-xl bg-gradient-to-br ${game.color} 
-                    flex items-center justify-center text-3xl mr-4
-                  `}>
-                    {game.icon}
-                  </div>
-                  <div className="flex-1">
-                    <h3 className="text-xl font-bold text-gray-800 mb-1">
-                      {game.title}
-                    </h3>
-                    <p className="text-gray-600">{game.description}</p>
-                    {!game.available && (
-                      <p className="text-sm text-orange-600 mt-1">
-                        🔒 Desbloquea completando otros módulos
-                      </p>
-                    )}
-                  </div>
-                  {game.available && (
-                    <div className="text-gray-400">
-                      <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                      </svg>
+            {games.map((game) => {
+              const completed = isModuleCompleted(game.id, game.totalQuestions);
+              const completedCount = getCompletedCount(game.id);
+
+              return (
+                <button
+                  key={game.id}
+                  onClick={() => game.available && onNavigate(game.id)}
+                  disabled={!game.available}
+                  className={`
+                    bg-white rounded-xl shadow-md p-6 text-left transition-all duration-200 relative
+                    ${game.available 
+                      ? 'hover:shadow-xl hover:scale-105 cursor-pointer' 
+                      : 'opacity-50 cursor-not-allowed'
+                    }
+                    ${completed ? 'ring-2 ring-green-500 bg-green-50' : ''}
+                  `}
+                >
+                  {/* Completed Badge */}
+                  {completed && (
+                    <div className="absolute -top-2 -right-2 bg-green-500 text-white px-3 py-1 rounded-full shadow-lg flex items-center text-sm font-bold">
+                      <CheckCircle size={16} className="mr-1" />
+                      Completado
                     </div>
                   )}
-                </div>
-              </button>
-            ))}
+
+                  {/* Lock Badge for unavailable */}
+                  {!game.available && (
+                    <div className="absolute -top-2 -right-2 bg-gray-400 text-white px-3 py-1 rounded-full shadow-lg flex items-center text-sm font-bold">
+                      <Lock size={16} className="mr-1" />
+                      Bloqueado
+                    </div>
+                  )}
+
+                  <div className="flex items-center">
+                    <div className={`
+                      w-16 h-16 rounded-xl bg-gradient-to-br ${game.color} 
+                      flex items-center justify-center text-3xl mr-4 flex-shrink-0
+                    `}>
+                      {game.icon}
+                    </div>
+                    <div className="flex-1">
+                      <h3 className="text-xl font-bold text-gray-800 mb-1">
+                        {game.title}
+                      </h3>
+                      <p className="text-gray-600 text-sm">{game.description}</p>
+                      
+                      {/* Progress indicator */}
+                      {game.available && completedCount > 0 && (
+                        <div className="mt-2">
+                          <div className="flex items-center justify-between text-xs text-gray-500 mb-1">
+                            <span>Progreso</span>
+                            <span className="font-semibold">{completedCount}/{game.totalQuestions}</span>
+                          </div>
+                          <div className="w-full bg-gray-200 rounded-full h-2">
+                            <div 
+                              className={`h-2 rounded-full bg-gradient-to-r ${game.color} transition-all duration-500`}
+                              style={{ width: `${(completedCount / game.totalQuestions) * 100}%` }}
+                            />
+                          </div>
+                        </div>
+                      )}
+
+                      {!game.available && (
+                        <p className="text-sm text-orange-600 mt-2">
+                          🔒 Desbloquea completando otros módulos
+                        </p>
+                      )}
+                    </div>
+                    {game.available && (
+                      <div className={`text-gray-400 ml-4 ${completed ? 'text-green-500' : ''}`}>
+                        {completed ? (
+                          <CheckCircle size={24} />
+                        ) : (
+                          <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                          </svg>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                </button>
+              );
+            })}
           </div>
         </div>
 
