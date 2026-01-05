@@ -204,7 +204,12 @@ export default function App() {
   const renderScreen = () => {
     switch (currentScreen) {
       case Screen.HOME:
-       return <Home onNavigate={setCurrentScreen} unlockedBadges={gameState.badges} completedGames={gameState.completedGames} user={user} isAdmin={isAdmin} />;
+       return <Home 
+                onNavigate={setCurrentScreen} 
+                unlockedBadges={gameState.badges} 
+                completedGames={gameState.completedGames} 
+                user={user} isAdmin={isAdmin} 
+                />;
       case Screen.TRUE_FALSE:
         return <TrueFalseGame level={userLevel} onComplete={handleGameComplete} />;
       case Screen.MATCH:
