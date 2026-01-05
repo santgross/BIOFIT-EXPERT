@@ -180,9 +180,9 @@ export const AdminDashboard: React.FC<Props> = ({ onBack }) => {
               <p className="text-gray-600 mt-1">Panel de control y estadísticas de BIOTrivia</p>
             </div>
           </div>
-          <Button onClick={exportToExcel} className="flex items-center justify-center shadow-lg">
+          <Button onClick={exportToExcel} className="flex items-center justify-center shadow-lg whitespace-nowrap">
             <Download size={20} className="mr-2" />
-            Exportar Excel
+            Excel
           </Button>
         </div>
 
