@@ -101,11 +101,11 @@ export const AdminDashboard: React.FC<Props> = ({ onBack }) => {
       u.points,
       u.level === 1 ? 'Principiante' : u.level === 2 ? 'Avanzado' : 'Experto',
       u.badges.length,
-      new Date(u.created_at).toLocaleDateString()
+      new Date(u.created_at).toLocaleDateString('es-EC')
     ]);
 
     const csv = [headers, ...rows].map(row => row.join(',')).join('\n');
-    const blob = new Blob([csv], { type: 'text/csv' });
+    const blob = new Blob(['\ufeff' + csv], { type: 'text/csv;charset=utf-8;' });
     const url = window.URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
@@ -115,9 +115,9 @@ export const AdminDashboard: React.FC<Props> = ({ onBack }) => {
 
   const getLevelBadge = (level: number) => {
     const colors = {
-      1: 'bg-green-100 text-green-800',
-      2: 'bg-blue-100 text-blue-800',
-      3: 'bg-purple-100 text-purple-800'
+      1: 'bg-green-100 text-green-800 border border-green-200',
+      2: 'bg-blue-100 text-blue-800 border border-blue-200',
+      3: 'bg-purple-100 text-purple-800 border border-purple-200'
     };
     const labels = {
       1: 'Principiante',
@@ -125,7 +125,7 @@ export const AdminDashboard: React.FC<Props> = ({ onBack }) => {
       3: 'Experto'
     };
     return (
-      <span className={`px-3 py-1 rounded-full text-sm font-semibold ${colors[level as keyof typeof colors]}`}>
+      <span className={`px-3 py-1 rounded-full text-xs font-bold ${colors[level as keyof typeof colors]}`}>
         {labels[level as keyof typeof labels]}
       </span>
     );
@@ -134,136 +134,149 @@ export const AdminDashboard: React.FC<Props> = ({ onBack }) => {
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-xl font-semibold text-gray-600">Cargando datos...</div>
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-green-600 mx-auto mb-4"></div>
+          <p className="text-xl font-semibold text-gray-600">Cargando datos...</p>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 p-6">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 p-4 md:p-6 lg:p-8">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
-        <div className="flex items-center justify-between mb-8">
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-8 gap-4">
           <div className="flex items-center">
             <button
               onClick={onBack}
-              className="mr-4 p-2 hover:bg-gray-200 rounded-lg transition"
+              className="mr-4 p-2 hover:bg-white rounded-lg transition shadow-sm"
             >
-              <ArrowLeft size={24} />
+              <ArrowLeft size={24} className="text-gray-700" />
             </button>
-            <h1 className="text-3xl font-bold text-gray-800">Dashboard de Administración</h1>
+            <div>
+              <h1 className="text-3xl md:text-4xl font-bold text-gray-800">Dashboard de Administración</h1>
+              <p className="text-gray-600 mt-1">Panel de control y estadísticas de BIOTrivia</p>
+            </div>
           </div>
-          <Button onClick={exportToCSV} className="flex items-center">
+          <Button onClick={exportToCSV} className="flex items-center justify-center shadow-lg">
             <Download size={20} className="mr-2" />
             Exportar CSV
           </Button>
         </div>
 
         {/* Estadísticas */}
-        <div className="grid grid-cols-1 md:grid-cols-5 gap-6 mb-8">
-          <div className="bg-white rounded-lg shadow p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-gray-500 text-sm">Total Usuarios</p>
-                <p className="text-3xl font-bold text-gray-800">{stats.total}</p>
-              </div>
-              <Users className="text-blue-500" size={40} />
+        <div className="grid grid-cols-2 md:grid-cols-5 gap-4 md:gap-6 mb-8">
+          <div className="bg-white rounded-xl shadow-md p-6 hover:shadow-lg transition-shadow">
+            <div className="flex flex-col items-center text-center">
+              <Users className="text-blue-500 mb-3" size={40} />
+              <p className="text-gray-500 text-sm font-medium mb-2">Total Usuarios</p>
+              <p className="text-4xl font-bold text-gray-800">{stats.total}</p>
             </div>
           </div>
 
-          <div className="bg-white rounded-lg shadow p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-gray-500 text-sm">Principiantes</p>
-                <p className="text-3xl font-bold text-green-600">{stats.principiantes}</p>
-              </div>
-              <TrendingUp className="text-green-500" size={40} />
+          <div className="bg-white rounded-xl shadow-md p-6 hover:shadow-lg transition-shadow">
+            <div className="flex flex-col items-center text-center">
+              <TrendingUp className="text-green-500 mb-3" size={40} />
+              <p className="text-gray-500 text-sm font-medium mb-2">Principiantes</p>
+              <p className="text-4xl font-bold text-green-600">{stats.principiantes}</p>
             </div>
           </div>
 
-          <div className="bg-white rounded-lg shadow p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-gray-500 text-sm">Avanzados</p>
-                <p className="text-3xl font-bold text-blue-600">{stats.avanzados}</p>
-              </div>
-              <TrendingUp className="text-blue-500" size={40} />
+          <div className="bg-white rounded-xl shadow-md p-6 hover:shadow-lg transition-shadow">
+            <div className="flex flex-col items-center text-center">
+              <TrendingUp className="text-blue-500 mb-3" size={40} />
+              <p className="text-gray-500 text-sm font-medium mb-2">Avanzados</p>
+              <p className="text-4xl font-bold text-blue-600">{stats.avanzados}</p>
             </div>
           </div>
 
-          <div className="bg-white rounded-lg shadow p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-gray-500 text-sm">Expertos</p>
-                <p className="text-3xl font-bold text-purple-600">{stats.expertos}</p>
-              </div>
-              <Award className="text-purple-500" size={40} />
+          <div className="bg-white rounded-xl shadow-md p-6 hover:shadow-lg transition-shadow">
+            <div className="flex flex-col items-center text-center">
+              <Award className="text-purple-500 mb-3" size={40} />
+              <p className="text-gray-500 text-sm font-medium mb-2">Expertos</p>
+              <p className="text-4xl font-bold text-purple-600">{stats.expertos}</p>
             </div>
           </div>
 
-          <div className="bg-white rounded-lg shadow p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-gray-500 text-sm">Promedio Puntos</p>
-                <p className="text-3xl font-bold text-orange-600">{stats.promedioPoints}</p>
-              </div>
-              <Award className="text-orange-500" size={40} />
+          <div className="bg-white rounded-xl shadow-md p-6 hover:shadow-lg transition-shadow">
+            <div className="flex flex-col items-center text-center">
+              <Award className="text-orange-500 mb-3" size={40} />
+              <p className="text-gray-500 text-sm font-medium mb-2">Promedio Puntos</p>
+              <p className="text-4xl font-bold text-orange-600">{stats.promedioPoints}</p>
             </div>
           </div>
         </div>
 
         {/* Tabla de Usuarios */}
-        <div className="bg-white rounded-lg shadow overflow-hidden">
-          <div className="px-6 py-4 border-b border-gray-200">
-            <h2 className="text-xl font-semibold text-gray-800">Usuarios Registrados</h2>
+        <div className="bg-white rounded-xl shadow-lg overflow-hidden">
+          <div className="px-6 py-5 border-b border-gray-200 bg-gradient-to-r from-green-50 to-blue-50">
+            <h2 className="text-2xl font-bold text-gray-800">Usuarios Registrados</h2>
+            <p className="text-gray-600 mt-1">Lista completa de dependientes de farmacia</p>
           </div>
           <div className="overflow-x-auto">
             <table className="w-full">
-              <thead className="bg-gray-50">
+              <thead className="bg-gray-100">
                 <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Nombre</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Email</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Celular</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Farmacia</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Visitador</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Puntos</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Nivel</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Badges</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Registro</th>
+                  <th className="px-6 py-4 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">Nombre</th>
+                  <th className="px-6 py-4 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">Email</th>
+                  <th className="px-6 py-4 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">Celular</th>
+                  <th className="px-6 py-4 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">Farmacia</th>
+                  <th className="px-6 py-4 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">Visitador</th>
+                  <th className="px-6 py-4 text-center text-xs font-bold text-gray-600 uppercase tracking-wider">Puntos</th>
+                  <th className="px-6 py-4 text-center text-xs font-bold text-gray-600 uppercase tracking-wider">Nivel</th>
+                  <th className="px-6 py-4 text-center text-xs font-bold text-gray-600 uppercase tracking-wider">Badges</th>
+                  <th className="px-6 py-4 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">Registro</th>
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
-                {users.map((user) => (
-                  <tr key={user.id} className="hover:bg-gray-50">
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                      {user.full_name}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      {user.email}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      {user.celular}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      {user.farmacia}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      {user.nombre_visitador}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-semibold text-gray-900">
-                      {user.points}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      {getLevelBadge(user.level)}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      {user.badges.length}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      {new Date(user.created_at).toLocaleDateString()}
+                {users.length === 0 ? (
+                  <tr>
+                    <td colSpan={9} className="px-6 py-8 text-center text-gray-500">
+                      No hay usuarios registrados todavía
                     </td>
                   </tr>
-                ))}
+                ) : (
+                  users.map((user) => (
+                    <tr key={user.id} className="hover:bg-gray-50 transition-colors">
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="font-semibold text-gray-900">{user.full_name}</div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="text-sm text-gray-600">{user.email}</div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="text-sm text-gray-600">{user.celular}</div>
+                      </td>
+                      <td className="px-6 py-4">
+                        <div className="text-sm text-gray-600 max-w-xs truncate">{user.farmacia}</div>
+                      </td>
+                      <td className="px-6 py-4">
+                        <div className="text-sm text-gray-600">{user.nombre_visitador}</div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-center">
+                        <span className="text-lg font-bold text-gray-900">{user.points}</span>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-center">
+                        {getLevelBadge(user.level)}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-center">
+                        <span className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-yellow-100 text-yellow-800 font-bold text-sm">
+                          {user.badges.length}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="text-sm text-gray-600">
+                          {new Date(user.created_at).toLocaleDateString('es-EC', {
+                            year: 'numeric',
+                            month: 'short',
+                            day: 'numeric'
+                          })}
+                        </div>
+                      </td>
+                    </tr>
+                  ))
+                )}
               </tbody>
             </table>
           </div>
