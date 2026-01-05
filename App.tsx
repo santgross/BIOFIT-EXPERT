@@ -9,12 +9,14 @@ import { BadgesScreen } from './screens/Badges';
 import { Register } from './screens/Register';
 import { Login } from './screens/Login';
 import { PrivacyConsent } from './components/PrivacyConsent';
+import { AdminDashboard } from './screens/AdminDashboard';
 import { GameState, Screen, User } from './types';
 import { BADGES, LEVEL_THRESHOLDS } from './constants';
 import { supabase } from './supabaseClient';
 
 export default function App() {
   const [user, setUser] = useState<User | null>(null);
+  const [isAdmin, setIsAdmin] = useState(false);
   const [gameState, setGameState] = useState<GameState>({
     points: 0,
     level: 1,
@@ -83,6 +85,9 @@ export default function App() {
         badges: gameData.badges || [],
         completedGames: gameData.completed_games || []
       });
+
+      // Verificar si es administrador
+      setIsAdmin(profile.is_admin || false);
 
       // Verificar si necesita aceptar política de privacidad
       if (!profile.privacy_accepted) {
@@ -172,6 +177,7 @@ export default function App() {
     try {
       await supabase.auth.signOut();
       setUser(null);
+      setIsAdmin(false);
       setGameState({
         points: 0,
         level: 1,
@@ -198,7 +204,7 @@ export default function App() {
   const renderScreen = () => {
     switch (currentScreen) {
       case Screen.HOME:
-        return <Home onNavigate={setCurrentScreen} unlockedBadges={gameState.badges} user={user} />;
+        return <Home onNavigate={setCurrentScreen} unlockedBadges={gameState.badges} user={user} isAdmin={isAdmin} />;
       case Screen.TRUE_FALSE:
         return <TrueFalseGame level={userLevel} onComplete={handleGameComplete} />;
       case Screen.MATCH:
@@ -209,8 +215,10 @@ export default function App() {
         return <TriviaGame level={userLevel} onComplete={handleGameComplete} />;
       case Screen.BADGES:
         return <BadgesScreen gameState={gameState} onBack={() => setCurrentScreen(Screen.HOME)} />;
+      case Screen.ADMIN:
+        return <AdminDashboard onBack={() => setCurrentScreen(Screen.HOME)} />;
       default:
-        return <Home onNavigate={setCurrentScreen} unlockedBadges={gameState.badges} user={user} />;
+        return <Home onNavigate={setCurrentScreen} unlockedBadges={gameState.badges} user={user} isAdmin={isAdmin} />;
     }
   };
 
