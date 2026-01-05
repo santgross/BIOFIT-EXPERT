@@ -14,6 +14,16 @@ import { GameState, Screen, User } from './types';
 import { BADGES, LEVEL_THRESHOLDS } from './constants';
 import { supabase } from './supabaseClient';
 
+// Puntos máximos por módulo
+const MAX_POINTS_PER_MODULE = {
+  [Screen.TRUE_FALSE]: 300,
+  [Screen.MATCH]: 220,
+  [Screen.SCENARIO]: 200,
+  [Screen.TRIVIA]: 450
+};
+
+const TOTAL_MAX_POINTS = 1170;
+
 export default function App() {
   const [user, setUser] = useState<User | null>(null);
   const [isAdmin, setIsAdmin] = useState(false);
@@ -191,11 +201,18 @@ export default function App() {
   };
 
   const handleGameComplete = async (pointsEarned: number) => {
-    const newPoints = gameState.points + pointsEarned;
-    const updatedState = { ...gameState, points: newPoints };
+    if (!user) {
+      setCurrentScreen(Screen.HOME);
+      return;
+    }
+
+    // Limitar puntos al máximo total
+    const newPoints = Math.min(gameState.points + pointsEarned, TOTAL_MAX_POINTS);
     
-    setGameState(updatedState);
-    await updateGameStateInDB(updatedState);
+    // Recargar datos desde Supabase para obtener el estado actualizado
+    await loadUserData(user.id);
+    
+    // Navegar al home
     setCurrentScreen(Screen.HOME);
   };
 
