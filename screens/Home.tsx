@@ -12,12 +12,12 @@ interface Props {
 }
 
 export const Home: React.FC<Props> = ({ onNavigate, unlockedBadges, completedGames, user, isAdmin = false }) => {
-  // IDs de preguntas por módulo
+  // IDs de preguntas/actividades por módulo
   const MODULE_QUESTIONS = {
     [Screen.TRUE_FALSE]: ['tf1', 'tf2', 'tf3', 'tf4', 'tf5', 'tf6'],
-    [Screen.MATCH]: [], // Añadir cuando implementes Match
-    [Screen.SCENARIO]: [], // Añadir cuando implementes Scenario
-    [Screen.TRIVIA]: [] // Añadir cuando implementes Trivia
+    [Screen.MATCH]: ['match-level-1', 'match-level-2'],
+    [Screen.SCENARIO]: ['scenario-level-2', 'scenario-level-3'],
+    [Screen.TRIVIA]: ['trivia-level-1', 'trivia-level-2', 'trivia-level-3']
   };
 
   const games = [
@@ -37,7 +37,7 @@ export const Home: React.FC<Props> = ({ onNavigate, unlockedBadges, completedGam
       icon: '⚡',
       color: 'from-orange-500 to-orange-600',
       available: true,
-      totalQuestions: 8
+      totalQuestions: 2
     },
     {
       id: Screen.SCENARIO,
@@ -46,7 +46,7 @@ export const Home: React.FC<Props> = ({ onNavigate, unlockedBadges, completedGam
       icon: '⚠',
       color: 'from-red-500 to-red-600',
       available: true,
-      totalQuestions: 5
+      totalQuestions: 2
     },
     {
       id: Screen.TRIVIA,
@@ -54,8 +54,8 @@ export const Home: React.FC<Props> = ({ onNavigate, unlockedBadges, completedGam
       description: 'Conocimiento General',
       icon: '🎯',
       color: 'from-purple-500 to-purple-600',
-      available: unlockedBadges.includes('trivia-master'),
-      totalQuestions: 10
+      available: true,
+      totalQuestions: 3
     }
   ];
 
