@@ -1,100 +1,127 @@
-
 import React from 'react';
-import { Play, CheckCircle2, AlertTriangle, Zap, Award } from 'lucide-react';
-import { Button } from '../components/Button';
 import { Screen, User } from '../types';
+import { LOGO_URL } from '../constants';
 
-interface HomeProps {
+interface Props {
   onNavigate: (screen: Screen) => void;
   unlockedBadges: string[];
   user: User | null;
+  isAdmin?: boolean;
 }
 
-export const Home: React.FC<HomeProps> = ({ onNavigate, unlockedBadges, user }) => {
-  const firstName = user?.name?.split(' ')[0] || 'Colega';
-  
+export const Home: React.FC<Props> = ({ onNavigate, unlockedBadges, user, isAdmin = false }) => {
+  const games = [
+    {
+      id: Screen.TRUE_FALSE,
+      title: 'Verdadero o Falso',
+      description: 'Mitos y Realidades BIOFIT',
+      icon: '✓',
+      color: 'from-blue-500 to-blue-600',
+      available: true
+    },
+    {
+      id: Screen.MATCH,
+      title: 'Match de Conceptos',
+      description: 'Precio, Beneficios y Acción',
+      icon: '⚡',
+      color: 'from-orange-500 to-orange-600',
+      available: true
+    },
+    {
+      id: Screen.SCENARIO,
+      title: 'Casos de Mostrador',
+      description: 'Simulación de Venta',
+      icon: '⚠',
+      color: 'from-red-500 to-red-600',
+      available: true
+    },
+    {
+      id: Screen.TRIVIA,
+      title: 'Trivia BIOFIT',
+      description: 'Conocimiento General',
+      icon: '🎯',
+      color: 'from-purple-500 to-purple-600',
+      available: unlockedBadges.includes('trivia-master')
+    }
+  ];
+
   return (
-    <div className="space-y-6">
-      <div className="bg-white p-6 rounded-2xl shadow-sm border border-green-100">
-        <h2 className="text-2xl font-bold text-gray-800 mb-2">¡Hola, {firstName}! 👋</h2>
-        <p className="text-gray-600">Bienvenido a <strong>BIOTrivia</strong>. Completa los módulos para dominar los beneficios del Psyllium Muciloide.</p>
-      </div>
+    <div className="min-h-screen bg-gradient-to-br from-green-50 to-green-100">
+      <div className="max-w-4xl mx-auto p-6">
+        {/* Header */}
+        <div className="text-center mb-8">
+          <img src={LOGO_URL} alt="BIOFIT Logo" className="h-20 mx-auto mb-4" />
+          <h1 className="text-4xl font-bold biofit-green mb-2">
+            ¡Hola, {user?.name?.split(' ')[0] || 'Usuario'}! 👋
+          </h1>
+          <p className="text-gray-600 text-lg">
+            Bienvenido a <strong>BIOTrivia</strong>. Completa los módulos para dominar los beneficios del Psyllium Muciloide.
+          </p>
+        </div>
 
-      <div className="grid grid-cols-1 gap-4">
-        <h3 className="font-bold text-lg text-[#00965E] flex items-center gap-2">
-           Módulos de Entrenamiento
-        </h3>
+        {/* Módulos de Entrenamiento */}
+        <div className="mb-8">
+          <h2 className="text-2xl font-bold biofit-green mb-4">Módulos de Entrenamiento</h2>
+          <div className="grid gap-4">
+            {games.map((game) => (
+              <button
+                key={game.id}
+                onClick={() => game.available && onNavigate(game.id)}
+                disabled={!game.available}
+                className={`
+                  bg-white rounded-xl shadow-md p-6 text-left transition-all duration-200
+                  ${game.available 
+                    ? 'hover:shadow-xl hover:scale-105 cursor-pointer' 
+                    : 'opacity-50 cursor-not-allowed'
+                  }
+                `}
+              >
+                <div className="flex items-center">
+                  <div className={`
+                    w-16 h-16 rounded-xl bg-gradient-to-br ${game.color} 
+                    flex items-center justify-center text-3xl mr-4
+                  `}>
+                    {game.icon}
+                  </div>
+                  <div className="flex-1">
+                    <h3 className="text-xl font-bold text-gray-800 mb-1">
+                      {game.title}
+                    </h3>
+                    <p className="text-gray-600">{game.description}</p>
+                    {!game.available && (
+                      <p className="text-sm text-orange-600 mt-1">
+                        🔒 Desbloquea completando otros módulos
+                      </p>
+                    )}
+                  </div>
+                  {game.available && (
+                    <div className="text-gray-400">
+                      <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                      </svg>
+                    </div>
+                  )}
+                </div>
+              </button>
+            ))}
+          </div>
+        </div>
 
-        <GameCard 
-          title="Verdadero o Falso"
-          subtitle="Mitos y Realidades BIOFIT"
-          icon={<CheckCircle2 className="text-white" size={24} />}
-          color="bg-blue-500"
-          onClick={() => onNavigate(Screen.TRUE_FALSE)}
-        />
-
-        <GameCard 
-          title="Match de Conceptos"
-          subtitle="Precio, Beneficios y Acción"
-          icon={<Zap className="text-white" size={24} />}
-          color="bg-[#F59E0B]"
-          onClick={() => onNavigate(Screen.MATCH)}
-        />
-
-        <GameCard 
-          title="Casos de Mostrador"
-          subtitle="Simulación de Venta"
-          icon={<AlertTriangle className="text-white" size={24} />}
-          color="bg-[#E11D48]"
-          onClick={() => onNavigate(Screen.SCENARIO)}
-        />
-
-        <GameCard 
-          title="Trivia Experto"
-          subtitle="Demuestra lo que sabes"
-          icon={<Play className="text-white" size={24} />}
-          color="bg-purple-600"
-          onClick={() => onNavigate(Screen.TRIVIA)}
-        />
-      </div>
-
-      <div className="pt-4">
-        <Button 
-            variant="outline" 
-            fullWidth 
-            onClick={() => onNavigate(Screen.BADGES)}
-            className="flex items-center justify-center gap-2"
-        >
-            <Award size={20} />
-            Ver mis Certificaciones ({unlockedBadges.length})
-        </Button>
+        {/* Botón de Admin (solo visible para administradores) */}
+        {isAdmin && (
+          <div className="mt-8">
+            <button
+              onClick={() => onNavigate(Screen.ADMIN)}
+              className="w-full bg-gradient-to-r from-purple-600 to-purple-700 text-white py-4 px-6 rounded-xl font-semibold text-lg shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200 flex items-center justify-center"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+              </svg>
+              Dashboard de Administración
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );
 };
-
-interface GameCardProps {
-  title: string;
-  subtitle: string;
-  icon: React.ReactNode;
-  color: string;
-  onClick: () => void;
-}
-
-const GameCard: React.FC<GameCardProps> = ({ title, subtitle, icon, color, onClick }) => (
-  <button 
-    onClick={onClick}
-    className="bg-white p-4 rounded-xl shadow-sm border border-gray-100 flex items-center space-x-4 hover:shadow-md transition-all active:scale-98 text-left w-full group"
-  >
-    <div className={`${color} p-3 rounded-lg shadow-sm group-hover:scale-110 transition-transform`}>
-      {icon}
-    </div>
-    <div className="flex-grow">
-      <h4 className="font-bold text-gray-800">{title}</h4>
-      <p className="text-sm text-gray-500">{subtitle}</p>
-    </div>
-    <div className="text-gray-300 group-hover:text-[#00965E]">
-        ▶
-    </div>
-  </button>
-);
