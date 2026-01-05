@@ -1,8 +1,8 @@
-
 import React, { useState, useMemo } from 'react';
 import { User, MessageCircle, AlertTriangle, CheckCircle2 } from 'lucide-react';
-import { DATA_BY_LEVEL } from '../constants';
+import { DATA_BY_LEVEL, GAME_IDS } from '../constants';
 import { Button } from '../components/Button';
+import { supabase } from '../supabaseClient';
 
 interface Props {
   level: 1 | 2 | 3;
@@ -57,6 +57,42 @@ export const ScenarioGame: React.FC<Props> = ({ level, onComplete }) => {
     }
   };
 
+  const handleComplete = async () => {
+    // Guardar progreso en Supabase
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        onComplete(score);
+        return;
+      }
+
+      // Obtener estado actual
+      const { data: gameState } = await supabase
+        .from('game_state')
+        .select('completed_games')
+        .eq('user_id', session.user.id)
+        .single();
+
+      const completed = gameState?.completed_games || [];
+      const gameId = GAME_IDS.SCENARIO[level];
+
+      // Solo agregar si no está completado
+      if (!completed.includes(gameId)) {
+        const newCompleted = [...completed, gameId];
+        
+        await supabase
+          .from('game_state')
+          .update({ completed_games: newCompleted })
+          .eq('user_id', session.user.id);
+      }
+
+      onComplete(score);
+    } catch (error) {
+      console.error('Error saving scenario progress:', error);
+      onComplete(score);
+    }
+  };
+
   if (isFinished) {
     return (
       <div className="text-center py-10 space-y-6 bg-white rounded-2xl p-8 shadow-sm">
@@ -66,7 +102,7 @@ export const ScenarioGame: React.FC<Props> = ({ level, onComplete }) => {
         <h2 className="text-2xl font-bold text-gray-800">Simulación Completada</h2>
         <p className="text-gray-600">Has demostrado gran criterio en el mostrador.</p>
         <p className="text-2xl font-bold text-[#00965E]">+{score} Puntos</p>
-        <Button onClick={() => onComplete(score)} fullWidth>
+        <Button onClick={handleComplete} fullWidth>
           Finalizar Visita
         </Button>
       </div>
