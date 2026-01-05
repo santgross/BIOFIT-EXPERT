@@ -20,51 +20,17 @@ export const Home: React.FC<Props> = ({ onNavigate, unlockedBadges, completedGam
     [Screen.TRIVIA]: ['trivia-level-1', 'trivia-level-2', 'trivia-level-3']
   };
 
-  const games = [
-    {
-      id: Screen.TRUE_FALSE,
-      title: 'Verdadero o Falso',
-      description: 'Mitos y Realidades BIOFIT',
-      icon: '✓',
-      color: 'from-blue-500 to-blue-600',
-      available: true,
-      totalQuestions: 6
-    },
-    {
-      id: Screen.MATCH,
-      title: 'Match de Conceptos',
-      description: 'Precio, Beneficios y Acción',
-      icon: '⚡',
-      color: 'from-orange-500 to-orange-600',
-      available: true,
-      totalQuestions: 2
-    },
-    {
-      id: Screen.SCENARIO,
-      title: 'Casos de Mostrador',
-      description: 'Simulación de Venta',
-      icon: '⚠',
-      color: 'from-red-500 to-red-600',
-      available: true,
-      totalQuestions: 2
-    },
-    {
-      id: Screen.TRIVIA,
-      title: 'Trivia BIOFIT',
-      description: 'Conocimiento General',
-      icon: '🎯',
-      color: 'from-purple-500 to-purple-600',
-      available: true,
-      totalQuestions: 3
-    }
-  ];
-
   // Función para verificar si un módulo está completado
   const isModuleCompleted = (gameId: Screen) => {
     const questionIds = MODULE_QUESTIONS[gameId as keyof typeof MODULE_QUESTIONS];
     if (!questionIds || questionIds.length === 0) return false;
     
-    // Verificar si TODAS las preguntas del módulo están en completedGames
+    // Para TRUE_FALSE, verificar si existe el ID del módulo completo
+    if (gameId === Screen.TRUE_FALSE) {
+      return completedGames.includes('true-false-complete');
+    }
+    
+    // Para otros módulos, verificar si TODAS las preguntas están completadas
     return questionIds.every(qId => completedGames.includes(qId));
   };
 
@@ -76,6 +42,72 @@ export const Home: React.FC<Props> = ({ onNavigate, unlockedBadges, completedGam
     // Contar cuántas preguntas del módulo están completadas
     return questionIds.filter(qId => completedGames.includes(qId)).length;
   };
+
+  // Función para verificar si un módulo está disponible
+  const isModuleAvailable = (gameId: Screen) => {
+    // TRUE_FALSE siempre está disponible (primer módulo)
+    if (gameId === Screen.TRUE_FALSE) return true;
+    
+    // MATCH requiere TRUE_FALSE completado
+    if (gameId === Screen.MATCH) {
+      return isModuleCompleted(Screen.TRUE_FALSE);
+    }
+    
+    // SCENARIO requiere MATCH completado
+    if (gameId === Screen.SCENARIO) {
+      return isModuleCompleted(Screen.MATCH);
+    }
+    
+    // TRIVIA requiere SCENARIO completado
+    if (gameId === Screen.TRIVIA) {
+      return isModuleCompleted(Screen.SCENARIO);
+    }
+    
+    return false;
+  };
+
+  const games = [
+    {
+      id: Screen.TRUE_FALSE,
+      title: 'Verdadero o Falso',
+      description: 'Mitos y Realidades BIOFIT',
+      icon: '✓',
+      color: 'from-blue-500 to-blue-600',
+      available: isModuleAvailable(Screen.TRUE_FALSE),
+      totalQuestions: 6,
+      maxPoints: 300
+    },
+    {
+      id: Screen.MATCH,
+      title: 'Match de Conceptos',
+      description: 'Precio, Beneficios y Acción',
+      icon: '⚡',
+      color: 'from-orange-500 to-orange-600',
+      available: isModuleAvailable(Screen.MATCH),
+      totalQuestions: 2,
+      maxPoints: 220
+    },
+    {
+      id: Screen.SCENARIO,
+      title: 'Casos de Mostrador',
+      description: 'Simulación de Venta',
+      icon: '⚠',
+      color: 'from-red-500 to-red-600',
+      available: isModuleAvailable(Screen.SCENARIO),
+      totalQuestions: 2,
+      maxPoints: 200
+    },
+    {
+      id: Screen.TRIVIA,
+      title: 'Trivia BIOFIT',
+      description: 'Conocimiento General',
+      icon: '🎯',
+      color: 'from-purple-500 to-purple-600',
+      available: isModuleAvailable(Screen.TRIVIA),
+      totalQuestions: 3,
+      maxPoints: 450
+    }
+  ];
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-green-50 to-green-100">
@@ -148,21 +180,24 @@ export const Home: React.FC<Props> = ({ onNavigate, unlockedBadges, completedGam
                           <div className="flex items-center justify-between text-xs text-gray-500 mb-1">
                             <span>Progreso</span>
                             <span className={`font-semibold ${completed ? 'text-green-600' : ''}`}>
-                              {completedCount}/{game.totalQuestions}
+                              {completed ? `✓ Completado` : `${completedCount}/${game.totalQuestions}`}
                             </span>
                           </div>
                           <div className="w-full bg-gray-200 rounded-full h-2">
                             <div 
                               className={`h-2 rounded-full bg-gradient-to-r ${completed ? 'from-green-500 to-green-600' : game.color} transition-all duration-500`}
-                              style={{ width: `${(completedCount / game.totalQuestions) * 100}%` }}
+                              style={{ width: `${completed ? 100 : (completedCount / game.totalQuestions) * 100}%` }}
                             />
                           </div>
+                          <p className="text-xs text-gray-400 mt-1">
+                            Puntos máximos: {game.maxPoints}
+                          </p>
                         </div>
                       )}
 
                       {!game.available && (
                         <p className="text-sm text-orange-600 mt-2">
-                          🔒 Desbloquea completando otros módulos
+                          🔒 Completa el módulo anterior para desbloquear
                         </p>
                       )}
                     </div>
