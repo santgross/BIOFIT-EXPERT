@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Users, TrendingUp, Award, ArrowLeft, Download } from 'lucide-react';
 import { Button } from '../components/Button';
 import { supabase } from '../supabaseClient';
+import * as XLSX from 'xlsx';
 
 interface UserData {
   id: string;
@@ -90,27 +91,47 @@ export const AdminDashboard: React.FC<Props> = ({ onBack }) => {
     }
   };
 
-  const exportToCSV = () => {
-    const headers = ['Nombre', 'Email', 'Celular', 'Farmacia', 'Visitador', 'Puntos', 'Nivel', 'Badges', 'Fecha Registro'];
-    const rows = users.map(u => [
-      u.full_name,
-      u.email,
-      u.celular,
-      u.farmacia,
-      u.nombre_visitador,
-      u.points,
-      u.level === 1 ? 'Principiante' : u.level === 2 ? 'Avanzado' : 'Experto',
-      u.badges.length,
-      new Date(u.created_at).toLocaleDateString('es-EC')
-    ]);
+  const exportToExcel = () => {
+    // Crear datos para Excel
+    const excelData = users.map(u => ({
+      'Nombre': u.full_name,
+      'Email': u.email,
+      'Celular': u.celular,
+      'Farmacia': u.farmacia,
+      'Visitador': u.nombre_visitador,
+      'Puntos': u.points,
+      'Nivel': u.level === 1 ? 'Principiante' : u.level === 2 ? 'Avanzado' : 'Experto',
+      'Badges': u.badges.length,
+      'Fecha Registro': new Date(u.created_at).toLocaleDateString('es-EC')
+    }));
 
-    const csv = [headers, ...rows].map(row => row.join(',')).join('\n');
-    const blob = new Blob(['\ufeff' + csv], { type: 'text/csv;charset=utf-8;' });
-    const url = window.URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `biotrivia-usuarios-${new Date().toISOString().split('T')[0]}.csv`;
-    a.click();
+    // Crear workbook y worksheet
+    const wb = XLSX.utils.book_new();
+    const ws = XLSX.utils.json_to_sheet(excelData);
+
+    // Ajustar ancho de columnas
+    const colWidths = [
+      { wch: 25 }, // Nombre
+      { wch: 30 }, // Email
+      { wch: 15 }, // Celular
+      { wch: 30 }, // Farmacia
+      { wch: 25 }, // Visitador
+      { wch: 10 }, // Puntos
+      { wch: 15 }, // Nivel
+      { wch: 10 }, // Badges
+      { wch: 15 }  // Fecha Registro
+    ];
+    ws['!cols'] = colWidths;
+
+    // Agregar worksheet al workbook
+    XLSX.utils.book_append_sheet(wb, ws, 'Usuarios BIOTrivia');
+
+    // Generar nombre de archivo con fecha
+    const fecha = new Date().toISOString().split('T')[0];
+    const fileName = `BIOTrivia-Usuarios-${fecha}.xlsx`;
+
+    // Descargar archivo
+    XLSX.writeFile(wb, fileName);
   };
 
   const getLevelBadge = (level: number) => {
@@ -159,9 +180,9 @@ export const AdminDashboard: React.FC<Props> = ({ onBack }) => {
               <p className="text-gray-600 mt-1">Panel de control y estadísticas de BIOTrivia</p>
             </div>
           </div>
-          <Button onClick={exportToCSV} className="flex items-center justify-center shadow-lg">
+          <Button onClick={exportToExcel} className="flex items-center justify-center shadow-lg">
             <Download size={20} className="mr-2" />
-            Exportar CSV
+            Exportar Excel
           </Button>
         </div>
 
