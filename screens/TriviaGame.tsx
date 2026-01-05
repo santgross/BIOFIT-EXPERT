@@ -1,8 +1,8 @@
-
 import React, { useState, useEffect, useRef } from 'react';
 import { Timer, Zap } from 'lucide-react';
 import { Button } from '../components/Button';
-import { DATA_BY_LEVEL } from '../constants';
+import { DATA_BY_LEVEL, GAME_IDS } from '../constants';
+import { supabase } from '../supabaseClient';
 
 interface Props {
   level: 1 | 2 | 3;
@@ -69,6 +69,42 @@ export const TriviaGame: React.FC<Props> = ({ level, onComplete }) => {
     }
   };
 
+  const handleComplete = async () => {
+    // Guardar progreso en Supabase
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        onComplete(score);
+        return;
+      }
+
+      // Obtener estado actual
+      const { data: gameState } = await supabase
+        .from('game_state')
+        .select('completed_games')
+        .eq('user_id', session.user.id)
+        .single();
+
+      const completed = gameState?.completed_games || [];
+      const gameId = GAME_IDS.TRIVIA[level];
+
+      // Solo agregar si no está completado
+      if (!completed.includes(gameId)) {
+        const newCompleted = [...completed, gameId];
+        
+        await supabase
+          .from('game_state')
+          .update({ completed_games: newCompleted })
+          .eq('user_id', session.user.id);
+      }
+
+      onComplete(score);
+    } catch (error) {
+      console.error('Error saving trivia progress:', error);
+      onComplete(score);
+    }
+  };
+
   if (isFinished) {
     return (
       <div className="text-center py-12 space-y-6">
@@ -81,7 +117,7 @@ export const TriviaGame: React.FC<Props> = ({ level, onComplete }) => {
             <p className="flex justify-between mb-2"><span>Preguntas:</span> <span className="font-bold">{index + 1}/{questions.length}</span></p>
             <p className="flex justify-between text-lg"><span>Puntaje:</span> <span className="font-bold text-[#00965E]">{score}</span></p>
         </div>
-        <Button onClick={() => onComplete(score)} fullWidth>
+        <Button onClick={handleComplete} fullWidth>
           Recoger Puntos
         </Button>
       </div>
