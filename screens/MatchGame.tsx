@@ -1,9 +1,9 @@
-
 import React, { useState, useEffect } from 'react';
-import { DATA_BY_LEVEL } from '../constants';
+import { DATA_BY_LEVEL, GAME_IDS } from '../constants';
 import { MatchItem } from '../types';
 import { Button } from '../components/Button';
 import { Shuffle } from 'lucide-react';
+import { supabase } from '../supabaseClient';
 
 interface Props {
   level: 1 | 2 | 3;
@@ -55,13 +55,54 @@ export const MatchGame: React.FC<Props> = ({ level, onComplete }) => {
 
   const allMatched = items.length > 0 && matchedIds.length === items.length;
 
+  const handleComplete = async () => {
+    // Calcular puntos
+    const minAttempts = items.length / 2;
+    const penalty = Math.max(0, (attempts - minAttempts) * 10);
+    const baseScore = level === 3 ? 150 : (level === 2 ? 120 : 100); 
+    const finalScore = Math.max(20, baseScore - penalty);
+
+    // Guardar progreso en Supabase
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        onComplete(finalScore);
+        return;
+      }
+
+      // Obtener estado actual
+      const { data: gameState } = await supabase
+        .from('game_state')
+        .select('completed_games')
+        .eq('user_id', session.user.id)
+        .single();
+
+      const completed = gameState?.completed_games || [];
+      const gameId = GAME_IDS.MATCH[level];
+
+      // Solo agregar si no está completado
+      if (!completed.includes(gameId)) {
+        const newCompleted = [...completed, gameId];
+        
+        await supabase
+          .from('game_state')
+          .update({ completed_games: newCompleted })
+          .eq('user_id', session.user.id);
+      }
+
+      onComplete(finalScore);
+    } catch (error) {
+      console.error('Error saving match progress:', error);
+      onComplete(finalScore);
+    }
+  };
+
   if (allMatched) {
-     // Score calculation based on difficulty level
-     const minAttempts = items.length / 2;
-     const penalty = Math.max(0, (attempts - minAttempts) * 10);
-     // Higher base score for higher levels
-     const baseScore = level === 3 ? 150 : (level === 2 ? 120 : 100); 
-     const finalScore = Math.max(20, baseScore - penalty);
+    // Score calculation based on difficulty level
+    const minAttempts = items.length / 2;
+    const penalty = Math.max(0, (attempts - minAttempts) * 10);
+    const baseScore = level === 3 ? 150 : (level === 2 ? 120 : 100); 
+    const finalScore = Math.max(20, baseScore - penalty);
 
     return (
       <div className="text-center py-10 space-y-6">
@@ -71,7 +112,7 @@ export const MatchGame: React.FC<Props> = ({ level, onComplete }) => {
         <h2 className="text-2xl font-bold text-gray-800">¡Conexiones Nivel {level}!</h2>
         <p className="text-gray-600">Intentos: {attempts}</p>
         <p className="text-xl font-bold text-[#00965E]">Puntos: +{finalScore}</p>
-        <Button onClick={() => onComplete(finalScore)} fullWidth>
+        <Button onClick={handleComplete} fullWidth>
           Continuar
         </Button>
       </div>
