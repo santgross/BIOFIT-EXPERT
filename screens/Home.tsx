@@ -6,11 +6,20 @@ import { CheckCircle, Lock } from 'lucide-react';
 interface Props {
   onNavigate: (screen: Screen) => void;
   unlockedBadges: string[];
+  completedGames: string[];
   user: User | null;
   isAdmin?: boolean;
 }
 
-export const Home: React.FC<Props> = ({ onNavigate, unlockedBadges, user, isAdmin = false }) => {
+export const Home: React.FC<Props> = ({ onNavigate, unlockedBadges, completedGames, user, isAdmin = false }) => {
+  // IDs de preguntas por módulo
+  const MODULE_QUESTIONS = {
+    [Screen.TRUE_FALSE]: ['tf1', 'tf2', 'tf3', 'tf4', 'tf5', 'tf6'],
+    [Screen.MATCH]: [], // Añadir cuando implementes Match
+    [Screen.SCENARIO]: [], // Añadir cuando implementes Scenario
+    [Screen.TRIVIA]: [] // Añadir cuando implementes Trivia
+  };
+
   const games = [
     {
       id: Screen.TRUE_FALSE,
@@ -51,21 +60,21 @@ export const Home: React.FC<Props> = ({ onNavigate, unlockedBadges, user, isAdmi
   ];
 
   // Función para verificar si un módulo está completado
-  const isModuleCompleted = (gameId: Screen, totalQuestions: number) => {
-    // Por ahora solo verificamos Verdadero o Falso
-    // Puedes expandir esto cuando implementes los otros módulos
-    if (gameId === Screen.TRUE_FALSE) {
-      const completedTF = unlockedBadges.filter(b => b.startsWith('tf')).length;
-      return completedTF >= totalQuestions;
-    }
-    return false;
+  const isModuleCompleted = (gameId: Screen) => {
+    const questionIds = MODULE_QUESTIONS[gameId as keyof typeof MODULE_QUESTIONS];
+    if (!questionIds || questionIds.length === 0) return false;
+    
+    // Verificar si TODAS las preguntas del módulo están en completedGames
+    return questionIds.every(qId => completedGames.includes(qId));
   };
 
+  // Función para contar preguntas completadas
   const getCompletedCount = (gameId: Screen) => {
-    if (gameId === Screen.TRUE_FALSE) {
-      return unlockedBadges.filter(b => b.startsWith('tf')).length;
-    }
-    return 0;
+    const questionIds = MODULE_QUESTIONS[gameId as keyof typeof MODULE_QUESTIONS];
+    if (!questionIds || questionIds.length === 0) return 0;
+    
+    // Contar cuántas preguntas del módulo están completadas
+    return questionIds.filter(qId => completedGames.includes(qId)).length;
   };
 
   return (
@@ -87,7 +96,7 @@ export const Home: React.FC<Props> = ({ onNavigate, unlockedBadges, user, isAdmi
           <h2 className="text-2xl font-bold biofit-green mb-4">Módulos de Entrenamiento</h2>
           <div className="grid gap-4">
             {games.map((game) => {
-              const completed = isModuleCompleted(game.id, game.totalQuestions);
+              const completed = isModuleCompleted(game.id);
               const completedCount = getCompletedCount(game.id);
 
               return (
@@ -134,15 +143,17 @@ export const Home: React.FC<Props> = ({ onNavigate, unlockedBadges, user, isAdmi
                       <p className="text-gray-600 text-sm">{game.description}</p>
                       
                       {/* Progress indicator */}
-                      {game.available && completedCount > 0 && (
+                      {game.available && game.totalQuestions > 0 && (
                         <div className="mt-2">
                           <div className="flex items-center justify-between text-xs text-gray-500 mb-1">
                             <span>Progreso</span>
-                            <span className="font-semibold">{completedCount}/{game.totalQuestions}</span>
+                            <span className={`font-semibold ${completed ? 'text-green-600' : ''}`}>
+                              {completedCount}/{game.totalQuestions}
+                            </span>
                           </div>
                           <div className="w-full bg-gray-200 rounded-full h-2">
                             <div 
-                              className={`h-2 rounded-full bg-gradient-to-r ${game.color} transition-all duration-500`}
+                              className={`h-2 rounded-full bg-gradient-to-r ${completed ? 'from-green-500 to-green-600' : game.color} transition-all duration-500`}
                               style={{ width: `${(completedCount / game.totalQuestions) * 100}%` }}
                             />
                           </div>
