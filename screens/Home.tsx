@@ -36,6 +36,16 @@ export const Home: React.FC<Props> = ({ onNavigate, unlockedBadges, completedGam
 
   // Función para contar preguntas completadas
   const getCompletedCount = (gameId: Screen) => {
+    // Para TRUE_FALSE, verificar si está completado el módulo
+    if (gameId === Screen.TRUE_FALSE) {
+      if (completedGames.includes('true-false-complete')) {
+        return 6; // Todas completadas
+      }
+      // Contar preguntas individuales
+      const tfQuestions = ['tf1', 'tf2', 'tf3', 'tf4', 'tf5', 'tf6'];
+      return tfQuestions.filter(qId => completedGames.includes(qId)).length;
+    }
+    
     const questionIds = MODULE_QUESTIONS[gameId as keyof typeof MODULE_QUESTIONS];
     if (!questionIds || questionIds.length === 0) return 0;
     
