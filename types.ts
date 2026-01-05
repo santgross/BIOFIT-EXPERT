@@ -5,7 +5,7 @@ export enum Screen {
   MATCH = 'MATCH',
   SCENARIO = 'SCENARIO',
   TRIVIA = 'TRIVIA',
-  BADGES = 'BADGES'
+  BADGES = 'BADGES',
   ADMIN = 'admin'
 }
 
