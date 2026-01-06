@@ -28,22 +28,37 @@ export const Certificate: React.FC<Props> = ({ userName, onBack }) => {
         }
         
         @media print {
+          html, body {
+            width: 297mm;
+            height: 210mm;
+            margin: 0;
+            padding: 0;
+          }
+          
           body * {
             visibility: hidden;
           }
+          
           .certificate-print, .certificate-print * {
             visibility: visible;
           }
+          
           .certificate-print {
             position: fixed;
             left: 0;
             top: 0;
-            width: 100vw;
-            height: 100vh;
+            width: 297mm;
+            height: 210mm;
             margin: 0;
-            padding: 40px;
+            padding: 30mm;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
             page-break-after: avoid;
+            box-sizing: border-box;
           }
+          
           .no-print {
             display: none !important;
           }
@@ -65,79 +80,67 @@ export const Certificate: React.FC<Props> = ({ userName, onBack }) => {
 
           {/* Certificate - Landscape Format */}
           <div 
-            className="certificate-print bg-white rounded-xl shadow-2xl p-8 mb-6 border-4 border-[#00965E]"
-            style={{ aspectRatio: '1.414/1' }}
+            className="certificate-print bg-white rounded-xl shadow-2xl p-12 mb-6 border-4 border-[#00965E] w-full"
           >
-            {/* Logo Header */}
-            <div className="flex justify-center mb-6">
-              <img 
-                src="/LOGO-BIOFIT-SIN-FONDO.png" 
-                alt="BIOFIT Logo" 
-                className="h-20"
-              />
-            </div>
-
-            {/* Title with Icon */}
-            <div className="text-center mb-6">
-              <div className="inline-block p-3 bg-gradient-to-br from-yellow-400 to-yellow-600 rounded-full mb-3 shadow-lg">
-                <Award size={40} className="text-white" />
+            <div className="flex flex-col items-center justify-center h-full">
+              {/* Logo Header */}
+              <div className="mb-8">
+                <img 
+                  src="/LOGO-BIOFIT-SIN-FONDO.png" 
+                  alt="BIOFIT Logo" 
+                  className="h-24 mx-auto"
+                />
               </div>
-              <h1 className="text-4xl font-black text-[#00965E] mb-2">
-                CERTIFICADO DE EXCELENCIA
-              </h1>
-              <div className="w-32 h-1 bg-gradient-to-r from-[#00965E] to-yellow-500 mx-auto rounded-full"></div>
-            </div>
 
-            {/* Body */}
-            <div className="text-center space-y-4 mb-6">
-              <p className="text-base text-gray-600">
-                Se certifica que
-              </p>
-              
-              <h2 className="text-3xl font-bold text-gray-900 py-3 border-b-2 border-t-2 border-[#00965E] max-w-2xl mx-auto">
-                {userName}
-              </h2>
+              {/* Title with Icon */}
+              <div className="text-center mb-8">
+                <div className="inline-block p-4 bg-gradient-to-br from-yellow-400 to-yellow-600 rounded-full mb-4 shadow-lg">
+                  <Award size={48} className="text-white" />
+                </div>
+                <h1 className="text-5xl font-black text-[#00965E] mb-3">
+                  CERTIFICADO DE EXCELENCIA
+                </h1>
+                <div className="w-40 h-1.5 bg-gradient-to-r from-[#00965E] to-yellow-500 mx-auto rounded-full"></div>
+              </div>
 
-              <p className="text-sm text-gray-700 leading-relaxed max-w-3xl mx-auto px-8">
-                Ha completado exitosamente el programa <strong>BIOFIT EXPERT</strong>, 
-                demostrando dominio en los beneficios, ventajas competitivas y 
-                técnicas de venta de <strong className="text-[#00965E]">BIOFIT®</strong>.
-              </p>
-
-              <div className="bg-green-50 rounded-lg p-3 max-w-2xl mx-auto border border-green-200">
-                <p className="text-[#00965E] font-bold text-base">
-                  Embajador BIOFIT
+              {/* Body */}
+              <div className="text-center space-y-6 mb-8 w-full max-w-3xl">
+                <p className="text-xl text-gray-600">
+                  Se certifica que
                 </p>
-                <p className="text-xs text-gray-600 mt-1">
-                  Capacitado para asesorar profesionalmente sobre salud digestiva y bienestar
-                </p>
-              </div>
-            </div>
+                
+                <h2 className="text-4xl font-bold text-gray-900 py-4 border-b-2 border-t-2 border-[#00965E]">
+                  {userName}
+                </h2>
 
-            {/* Footer - Two columns */}
-            <div className="grid grid-cols-2 gap-8 items-end mt-8 pt-6 border-t-2 border-gray-200 max-w-4xl mx-auto">
-              {/* Left: Date */}
-              <div className="text-left">
-                <p className="text-xs text-gray-500 uppercase mb-1">Fecha de Emisión</p>
-                <p className="font-semibold text-gray-900 text-sm">{today}</p>
-              </div>
-              
-              {/* Right: Signature */}
-              <div className="text-right">
-                <div className="inline-block">
-                  <div className="border-t-2 border-gray-700 pt-2 min-w-[200px]">
-                    <p className="text-sm font-bold text-gray-800">Firma Autorizada</p>
-                    <p className="text-xs text-gray-600">PharmaBrand S.A.</p>
-                  </div>
+                <p className="text-base text-gray-700 leading-relaxed px-8">
+                  Ha completado exitosamente el programa <strong>BIOFIT EXPERT</strong>, 
+                  demostrando dominio en los beneficios, ventajas competitivas y 
+                  técnicas de venta de <strong className="text-[#00965E]">BIOFIT®</strong>.
+                </p>
+
+                <div className="bg-green-50 rounded-lg p-4 max-w-xl mx-auto border border-green-200">
+                  <p className="text-[#00965E] font-bold text-lg">
+                    Embajador BIOFIT
+                  </p>
+                  <p className="text-sm text-gray-600 mt-1">
+                    Capacitado para asesorar profesionalmente sobre salud digestiva y bienestar
+                  </p>
                 </div>
               </div>
-            </div>
 
-            {/* Brand Footer */}
-            <div className="text-center mt-6 pt-4 border-t border-gray-200">
-              <p className="text-xs text-gray-600">
-                <strong className="text-[#00965E]">BIOFIT®</strong> es un producto de <strong>PharmaBrand S.A.</strong>
-              </p>
+              {/* Footer - Centered Date */}
+              <div className="text-center mt-8 pt-6 border-t-2 border-gray-200 w-full max-w-2xl">
+                <p className="text-sm text-gray-500 uppercase mb-2">Fecha de Emisión</p>
+                <p className="font-bold text-gray-900 text-lg">{today}</p>
+              </div>
+
+              {/* Brand Footer */}
+              <div className="text-center mt-6 pt-4 border-t border-gray-200 w-full max-w-2xl">
+                <p className="text-sm text-gray-600">
+                  <strong className="text-[#00965E]">BIOFIT®</strong> es un producto de <strong>PharmaBrand S.A.</strong>
+                </p>
+              </div>
             </div>
           </div>
 
