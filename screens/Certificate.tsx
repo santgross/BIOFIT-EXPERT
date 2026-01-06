@@ -1,6 +1,6 @@
-import React, { useRef } from 'react';
+import React from 'react';
 import { Button } from '../components/Button';
-import { Award, Download, Printer } from 'lucide-react';
+import { Award, Download } from 'lucide-react';
 
 interface Props {
   userName: string;
