@@ -110,7 +110,7 @@ export default function App() {
       'trivia-level-1', 'trivia-level-2', 'trivia-level-3'
     ].every(id => completed.includes(id));
 
-    if (allModulesCompleted) {
+    if (allModulesCompleted && currentScreen === Screen.HOME) {
       setCurrentScreen(Screen.CERTIFICATE);
     }
   };
@@ -178,20 +178,13 @@ export default function App() {
     }
   };
 
- const handleGameComplete = async (pointsEarned: number) => {
-  if (!user) {
-    setCurrentScreen(Screen.HOME);
-    return;
-  }
-
-  // Recargar datos desde Supabase para obtener el estado actualizado
-  await loadUserData(user.id);
-  
-  // Navegar al home
-  setCurrentScreen(Screen.HOME);
+  const handleGameComplete = async (pointsEarned: number) => {
+    if (!user) {
+      setCurrentScreen(Screen.HOME);
+      return;
     }
 
-    // Recargar datos desde Supabase para obtener puntos actualizados
+    // Recargar datos desde Supabase para obtener el estado actualizado
     await loadUserData(user.id);
     
     // Navegar al home
