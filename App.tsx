@@ -178,10 +178,17 @@ export default function App() {
     }
   };
 
-  const handleGameComplete = async (pointsEarned: number) => {
-    if (!user) {
-      setCurrentScreen(Screen.HOME);
-      return;
+ const handleGameComplete = async (pointsEarned: number) => {
+  if (!user) {
+    setCurrentScreen(Screen.HOME);
+    return;
+  }
+
+  // Recargar datos desde Supabase para obtener el estado actualizado
+  await loadUserData(user.id);
+  
+  // Navegar al home
+  setCurrentScreen(Screen.HOME);
     }
 
     // Recargar datos desde Supabase para obtener puntos actualizados
