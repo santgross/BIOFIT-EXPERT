@@ -192,6 +192,42 @@ const MATCH_LEVEL_3: MatchItem[] = [
    SCENARIOS - CASOS DE MOSTRADOR
    ======================================== */
 
+/* --- SCENARIO NIVEL 1: CONSULTAS BÁSICAS DE PRODUCTO --- */
+const SCENARIO_LEVEL_1: Scenario[] = [
+  {
+    id: 101,
+    customer: "¿Cuánto cuesta BIOFIT? ¿Tienen promoción?",
+    clerkResponse: "BIOFIT cuesta $15.90. Es el mejor precio del mercado comparado con otras fibras de Psyllium. Además, rinde más porque viene en 300g.",
+    isCorrect: true,
+    correctAction: "",
+    feedback: "¡CORRECTO! Diste el precio exacto + argumento de valor (mejor precio + mayor rendimiento)."
+  },
+  {
+    id: 102,
+    customer: "¿En qué sabores viene? No me gusta lo muy dulce.",
+    clerkResponse: "Viene en 3 sabores: Fresa, Naranja y Original. Si no le gusta lo dulce, le recomiendo el Original que tiene sabor neutro.",
+    isCorrect: true,
+    correctAction: "",
+    feedback: "¡PERFECTO! Mostraste las opciones y recomendaste según la necesidad del cliente."
+  },
+  {
+    id: 103,
+    customer: "¿Para qué sirve BIOFIT exactamente?",
+    clerkResponse: "BIOFIT es fibra natural de Psyllium que ayuda en 4 cosas: regula el estreñimiento, reduce el colesterol, controla la glucosa y da sensación de saciedad.",
+    isCorrect: true,
+    correctAction: "",
+    feedback: "¡EXCELENTE! Destacaste los 4 beneficios principales. Cliente ve que es más que solo para estreñimiento."
+  },
+  {
+    id: 104,
+    customer: "¿Cómo se toma esto?",
+    clerkResponse: "Es muy fácil: mezcla 1 cucharada en un vaso de agua o jugo, revuelve y tómalo inmediatamente. Puedes tomarlo de 1 a 3 veces al día.",
+    isCorrect: true,
+    correctAction: "",
+    feedback: "¡MUY BIEN! Instrucciones claras y simples. Cliente sabe exactamente cómo usarlo."
+  }
+];
+
 /* --- SCENARIO NIVEL 2: CONSULTAS BÁSICAS --- */
 const SCENARIO_LEVEL_2: Scenario[] = [
   {
@@ -299,7 +335,7 @@ const TRIVIA_LEVEL_3: TriviaQuestion[] = [
 export const DATA_BY_LEVEL = {
   TF: { 1: TF_LEVEL_1, 2: TF_LEVEL_2, 3: TF_LEVEL_3 },
   MATCH: { 1: MATCH_LEVEL_1, 2: MATCH_LEVEL_2, 3: MATCH_LEVEL_3 },
-  SCENARIO: { 1: [], 2: SCENARIO_LEVEL_2, 3: SCENARIO_LEVEL_3 },
+  SCENARIO: { 1: SCENARIO_LEVEL_1, 2: SCENARIO_LEVEL_2, 3: SCENARIO_LEVEL_3 },
   TRIVIA: { 1: TRIVIA_LEVEL_1, 2: TRIVIA_LEVEL_2, 3: TRIVIA_LEVEL_3 }
 };
 
