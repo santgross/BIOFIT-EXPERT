@@ -74,58 +74,72 @@ export const Register: React.FC<Props> = ({ onRegister, onSwitchToLogin }) => {
     setErrors({});
 
     try {
-      // 1. Crear usuario en Supabase Auth
+      // 1. Registrar usuario
       const { data: authData, error: authError } = await supabase.auth.signUp({
         email: formData.email,
         password: formData.password
       });
 
-      if (authError) throw authError;
-      if (!authData.user) throw new Error('No se pudo crear el usuario');
+      if (authError) {
+        if (authError.message.includes('already')) {
+          throw new Error('Este email ya está registrado');
+        }
+        throw authError;
+      }
+
+      if (!authData.user) {
+        throw new Error('No se pudo crear el usuario');
+      }
 
       const userId = authData.user.id;
 
       // 2. Crear perfil
+      const profileData = {
+        user_id: userId,
+        full_name: formData.fullName,
+        email: formData.email,
+        phone: formData.phone,
+        pharmacy_name: formData.pharmacyName,
+        representative_name: formData.representativeName,
+        privacy_accepted: false
+      };
+
       const { error: profileError } = await supabase
         .from('profiles')
-        .insert([{
-          user_id: userId,
-          full_name: formData.fullName,
-          email: formData.email,
-          phone: formData.phone,
-          pharmacy_name: formData.pharmacyName,
-          representative_name: formData.representativeName,
-          privacy_accepted: false,
-          created_at: new Date().toISOString()
-        }]);
+        .insert([profileData]);
 
-      if (profileError) throw profileError;
-
-      // 3. Crear game_state
-      const { error: gameStateError } = await supabase
-        .from('game_state')
-        .insert([{
-          user_id: userId,
-          points: 0,
-          level: 1,
-          badges: [],
-          completed_games: [],
-          updated_at: new Date().toISOString()
-        }]);
-
-      if (gameStateError) {
-        console.error('Error game_state:', gameStateError);
+      if (profileError) {
+        console.error('Profile error:', profileError);
+        throw new Error('Error al crear perfil');
       }
 
-      // 4. Iniciar sesión
-      const { error: signInError } = await supabase.auth.signInWithPassword({
+      // 3. Crear game_state
+      const gameStateData = {
+        user_id: userId,
+        points: 0,
+        level: 1,
+        badges: [],
+        completed_games: []
+      };
+
+      const { error: gameError } = await supabase
+        .from('game_state')
+        .insert([gameStateData]);
+
+      if (gameError) {
+        console.error('Game state error:', gameError);
+      }
+
+      // 4. Esperar 1 segundo
+      await new Promise(r => setTimeout(r, 1000));
+
+      // 5. Iniciar sesión
+      await supabase.auth.signInWithPassword({
         email: formData.email,
         password: formData.password
       });
 
-      if (signInError) throw signInError;
-
-      // 5. Llamar onRegister
+      // 6. Registrar exitoso
       onRegister({
         id: userId,
         name: formData.fullName,
@@ -133,15 +147,10 @@ export const Register: React.FC<Props> = ({ onRegister, onSwitchToLogin }) => {
       });
 
     } catch (error: any) {
-      console.error('Error:', error);
-      
-      let errorMessage = 'Error al registrar usuario';
-      
-      if (error.message?.includes('already registered')) {
-        errorMessage = 'Este email ya está registrado';
-      }
-      
-      setErrors({ general: errorMessage });
+      console.error('Registration error:', error);
+      setErrors({ 
+        general: error.message || 'Error al registrar usuario' 
+      });
     } finally {
       setLoading(false);
     }
@@ -182,6 +191,7 @@ export const Register: React.FC<Props> = ({ onRegister, onSwitchToLogin }) => {
                 errors.fullName ? 'border-red-500' : 'border-gray-300'
               }`}
               placeholder="Juan Pérez"
+              disabled={loading}
             />
             {errors.fullName && (
               <p className="text-red-500 text-xs mt-1">{errors.fullName}</p>
@@ -200,6 +210,7 @@ export const Register: React.FC<Props> = ({ onRegister, onSwitchToLogin }) => {
                 errors.email ? 'border-red-500' : 'border-gray-300'
               }`}
               placeholder="ejemplo@farmacia.com"
+              disabled={loading}
             />
             {errors.email && (
               <p className="text-red-500 text-xs mt-1">{errors.email}</p>
@@ -219,6 +230,7 @@ export const Register: React.FC<Props> = ({ onRegister, onSwitchToLogin }) => {
               }`}
               placeholder="0987654321"
               maxLength={10}
+              disabled={loading}
             />
             {errors.phone && (
               <p className="text-red-500 text-xs mt-1">{errors.phone}</p>
@@ -237,6 +249,7 @@ export const Register: React.FC<Props> = ({ onRegister, onSwitchToLogin }) => {
                 errors.pharmacyName ? 'border-red-500' : 'border-gray-300'
               }`}
               placeholder="Farmacia Cruz Azul"
+              disabled={loading}
             />
             {errors.pharmacyName && (
               <p className="text-red-500 text-xs mt-1">{errors.pharmacyName}</p>
@@ -255,6 +268,7 @@ export const Register: React.FC<Props> = ({ onRegister, onSwitchToLogin }) => {
                 errors.representativeName ? 'border-red-500' : 'border-gray-300'
               }`}
               placeholder="María García"
+              disabled={loading}
             />
             {errors.representativeName && (
               <p className="text-red-500 text-xs mt-1">{errors.representativeName}</p>
@@ -273,6 +287,7 @@ export const Register: React.FC<Props> = ({ onRegister, onSwitchToLogin }) => {
                 errors.password ? 'border-red-500' : 'border-gray-300'
               }`}
               placeholder="Mínimo 6 caracteres"
+              disabled={loading}
             />
             {errors.password && (
               <p className="text-red-500 text-xs mt-1">{errors.password}</p>
@@ -291,6 +306,7 @@ export const Register: React.FC<Props> = ({ onRegister, onSwitchToLogin }) => {
                 errors.confirmPassword ? 'border-red-500' : 'border-gray-300'
               }`}
               placeholder="Repite tu contraseña"
+              disabled={loading}
             />
             {errors.confirmPassword && (
               <p className="text-red-500 text-xs mt-1">{errors.confirmPassword}</p>
@@ -303,7 +319,7 @@ export const Register: React.FC<Props> = ({ onRegister, onSwitchToLogin }) => {
             disabled={loading}
             className="mt-6"
           >
-            {loading ? 'Registrando...' : 'Crear Cuenta'}
+            {loading ? 'Creando cuenta...' : 'Crear Cuenta'}
           </Button>
         </form>
 
@@ -313,6 +329,7 @@ export const Register: React.FC<Props> = ({ onRegister, onSwitchToLogin }) => {
             <button
               onClick={onSwitchToLogin}
               className="text-[#00965E] font-semibold hover:underline"
+              disabled={loading}
             >
               Inicia Sesión
             </button>
