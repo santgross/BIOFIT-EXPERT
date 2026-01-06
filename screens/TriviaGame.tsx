@@ -1,7 +1,7 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { Timer, Zap, Star } from 'lucide-react';
-import { Button } from '../components/Button';
+import React, { useState, useEffect, useMemo } from 'react';
+import { Timer, Star, CheckCircle2 } from 'lucide-react';
 import { DATA_BY_LEVEL, GAME_IDS } from '../constants';
+import { Button } from '../components/Button';
 import { supabase } from '../supabaseClient';
 
 interface Props {
@@ -9,20 +9,18 @@ interface Props {
   onComplete: (score: number) => void;
 }
 
-export const TriviaGame: React.FC<Props> = ({ level: userLevel, onComplete }) => {
-  const [index, setIndex] = useState(0);
-  const [timeLeft, setTimeLeft] = useState(30);
+export const TriviaGame: React.FC<Props> = ({ level, onComplete }) => {
+  const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
+  const [selectedOption, setSelectedOption] = useState<number | null>(null);
+  const [showResult, setShowResult] = useState(false);
   const [score, setScore] = useState(0);
-  const [isGameActive, setIsGameActive] = useState(false);
+  const [timeLeft, setTimeLeft] = useState(30);
   const [isFinished, setIsFinished] = useState(false);
   const [showCelebration, setShowCelebration] = useState(false);
-  const [currentTriviaLevel, setCurrentTriviaLevel] = useState<1 | 2 | 3>(1);
-  const [loading, setLoading] = useState(true);
-  const timerRef = useRef<number | null>(null);
+  const [currentTriviaLevel, setCurrentTriviaLevel] = useState(1);
 
   useEffect(() => {
     loadTriviaProgress();
-    return () => stopTimer();
   }, []);
 
   const loadTriviaProgress = async () => {
@@ -30,7 +28,6 @@ export const TriviaGame: React.FC<Props> = ({ level: userLevel, onComplete }) =>
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) {
         setCurrentTriviaLevel(1);
-        setLoading(false);
         return;
       }
 
@@ -41,72 +38,71 @@ export const TriviaGame: React.FC<Props> = ({ level: userLevel, onComplete }) =>
         .single();
 
       const completed = gameState?.completed_games || [];
-
-      // Determinar qué nivel debe jugar
-      let levelToPlay: 1 | 2 | 3 = 1;
       
+      let levelToLoad = 1;
       if (completed.includes('trivia-level-1') && completed.includes('trivia-level-2')) {
-        levelToPlay = 3;
+        levelToLoad = 3;
       } else if (completed.includes('trivia-level-1')) {
-        levelToPlay = 2;
-      } else {
-        levelToPlay = 1;
+        levelToLoad = 2;
       }
 
-      setCurrentTriviaLevel(levelToPlay);
-      setLoading(false);
+      setCurrentTriviaLevel(levelToLoad);
     } catch (error) {
       console.error('Error loading trivia progress:', error);
       setCurrentTriviaLevel(1);
-      setLoading(false);
     }
   };
 
-  const questions = DATA_BY_LEVEL.TRIVIA[currentTriviaLevel];
-  const currentQ = questions[index];
+  const questions = useMemo(() => {
+    return DATA_BY_LEVEL.TRIVIA[currentTriviaLevel] || [];
+  }, [currentTriviaLevel]);
 
-  const startTimer = () => {
-    if (timerRef.current) clearInterval(timerRef.current);
-    timerRef.current = window.setInterval(() => {
-      setTimeLeft((prev) => {
+  useEffect(() => {
+    if (showResult || isFinished || timeLeft === 0) return;
+
+    const timer = setInterval(() => {
+      setTimeLeft(prev => {
         if (prev <= 1) {
-          stopTimer();
-          finishGame();
+          handleTimeout();
           return 0;
         }
         return prev - 1;
       });
     }, 1000);
+
+    return () => clearInterval(timer);
+  }, [showResult, isFinished, timeLeft]);
+
+  const handleTimeout = () => {
+    setShowResult(true);
   };
 
-  const stopTimer = () => {
-    if (timerRef.current) {
-      clearInterval(timerRef.current);
-      timerRef.current = null;
-    }
+  const handleOptionSelect = (index: number) => {
+    if (showResult) return;
+    setSelectedOption(index);
   };
 
-  const startGame = () => {
-    setIsGameActive(true);
-    startTimer();
-  };
+  const handleSubmit = () => {
+    if (selectedOption === null) return;
 
-  const finishGame = () => {
-    stopTimer();
-    setIsGameActive(false);
-    setIsFinished(true);
-  };
+    const currentQuestion = questions[currentQuestionIndex];
+    const isCorrect = selectedOption === currentQuestion.correctIndex;
 
-  const handleAnswer = (optionIndex: number) => {
-    const isCorrect = optionIndex === currentQ.correctIndex;
     if (isCorrect) {
-        setScore(s => s + 50);
+      setScore(s => s + 50);
     }
-    
-    if (index < questions.length - 1) {
-      setIndex(prev => prev + 1);
+
+    setShowResult(true);
+  };
+
+  const handleNext = () => {
+    if (currentQuestionIndex < questions.length - 1) {
+      setCurrentQuestionIndex(prev => prev + 1);
+      setSelectedOption(null);
+      setShowResult(false);
+      setTimeLeft(30);
     } else {
-      finishGame();
+      setIsFinished(true);
     }
   };
 
@@ -120,19 +116,24 @@ export const TriviaGame: React.FC<Props> = ({ level: userLevel, onComplete }) =>
 
       const { data: gameState } = await supabase
         .from('game_state')
-        .select('completed_games')
+        .select('completed_games, points')
         .eq('user_id', session.user.id)
         .single();
 
       const completed = gameState?.completed_games || [];
       const gameId = GAME_IDS.TRIVIA[currentTriviaLevel];
+      const alreadyCompleted = completed.includes(gameId);
 
-      if (!completed.includes(gameId)) {
+      if (!alreadyCompleted) {
         const newCompleted = [...completed, gameId];
+        const currentPoints = gameState?.points || 0;
         
         await supabase
           .from('game_state')
-          .update({ completed_games: newCompleted })
+          .update({ 
+            completed_games: newCompleted,
+            points: currentPoints + score
+          })
           .eq('user_id', session.user.id);
       }
 
@@ -146,13 +147,10 @@ export const TriviaGame: React.FC<Props> = ({ level: userLevel, onComplete }) =>
     }
   };
 
-  if (loading) {
+  if (questions.length === 0) {
     return (
-      <div className="flex items-center justify-center h-full">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">Cargando trivia...</p>
-        </div>
+      <div className="text-center py-10">
+        <p className="text-gray-600">Cargando preguntas...</p>
       </div>
     );
   }
@@ -180,27 +178,31 @@ export const TriviaGame: React.FC<Props> = ({ level: userLevel, onComplete }) =>
             </div>
             <style>{`
               @keyframes float {
-                0% { transform: translateY(0) rotate(0deg); opacity: 1; }
-                100% { transform: translateY(100vh) rotate(360deg); opacity: 0; }
+                0% {
+                  transform: translateY(0) rotate(0deg);
+                  opacity: 1;
+                }
+                100% {
+                  transform: translateY(100vh) rotate(360deg);
+                  opacity: 0;
+                }
               }
-              .animate-float { animation: float linear forwards; }
+              .animate-float {
+                animation: float linear forwards;
+              }
             `}</style>
           </>
         )}
 
         <div className="bg-white rounded-3xl shadow-2xl p-8 max-w-md w-full text-center relative z-10 transform animate-bounce-in">
           <div className="inline-block p-4 rounded-full bg-purple-100 text-purple-600 mb-4">
-            <Timer size={48} />
+            <CheckCircle2 size={48} />
           </div>
           <h2 className="text-3xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent mb-2">
             ¡Nivel {currentTriviaLevel} Completado!
           </h2>
+          <p className="text-gray-600 mb-4">Has demostrado tu conocimiento sobre BIOFIT</p>
           
-          <div className="text-left max-w-xs mx-auto bg-gray-50 p-4 rounded-lg mb-6">
-            <p className="flex justify-between mb-2"><span>Nivel:</span> <span className="font-bold">{currentTriviaLevel}</span></p>
-            <p className="flex justify-between mb-2"><span>Preguntas:</span> <span className="font-bold">{index + 1}/{questions.length}</span></p>
-          </div>
-
           <div className="bg-gradient-to-br from-purple-50 to-pink-50 rounded-2xl p-6 mb-6 border-2 border-purple-200">
             <p className="text-gray-700 text-lg mb-2 font-semibold">Puntos Ganados</p>
             <p className="text-6xl font-black bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
@@ -209,16 +211,26 @@ export const TriviaGame: React.FC<Props> = ({ level: userLevel, onComplete }) =>
           </div>
 
           <Button onClick={handleComplete} fullWidth className="shadow-lg">
-            Recoger Puntos
+            Continuar al Menú
           </Button>
         </div>
 
         <style>{`
           @keyframes bounce-in {
-            0% { transform: scale(0.3); opacity: 0; }
-            50% { transform: scale(1.05); }
-            70% { transform: scale(0.9); }
-            100% { transform: scale(1); opacity: 1; }
+            0% {
+              transform: scale(0.3);
+              opacity: 0;
+            }
+            50% {
+              transform: scale(1.05);
+            }
+            70% {
+              transform: scale(0.9);
+            }
+            100% {
+              transform: scale(1);
+              opacity: 1;
+            }
           }
           .animate-bounce-in {
             animation: bounce-in 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55);
@@ -228,56 +240,77 @@ export const TriviaGame: React.FC<Props> = ({ level: userLevel, onComplete }) =>
     );
   }
 
-  if (!isGameActive) {
-    return (
-      <div className="text-center py-12 space-y-8">
-        <div className="inline-block p-6 rounded-full bg-purple-100 text-purple-600 mb-2 animate-pulse">
-          <Zap size={64} />
-        </div>
-        <div>
-            <div className="text-xs font-bold uppercase text-purple-600 bg-purple-100 inline-block px-2 py-1 rounded mb-2">Nivel {currentTriviaLevel}</div>
-            <h2 className="text-2xl font-bold text-gray-800 mb-2">Trivia Flash BIOFIT</h2>
-            <p className="text-gray-600">Tienes 30 segundos para responder tantas preguntas como puedas.</p>
-        </div>
-        <Button onClick={startGame} fullWidth className="text-lg h-14 bg-purple-600 hover:bg-purple-700">
-          ¡Empezar Ya!
-        </Button>
-      </div>
-    );
-  }
+  const currentQuestion = questions[currentQuestionIndex];
+  const isCorrect = selectedOption === currentQuestion.correctIndex;
 
   return (
-    <div className="flex flex-col h-full space-y-6">
-      <div className="space-y-2">
-        <div className="flex justify-between items-center font-bold text-gray-500 text-sm">
-            <span>Nivel {currentTriviaLevel} - Pregunta {index + 1}</span>
-            <span className={`${timeLeft < 10 ? 'text-red-500 animate-pulse' : 'text-purple-600'} flex items-center gap-1`}>
-                <Timer size={16} /> {timeLeft}s
-            </span>
-        </div>
-        <div className="w-full bg-gray-200 rounded-full h-2.5">
-            <div 
-                className="bg-purple-600 h-2.5 rounded-full transition-all duration-1000 ease-linear" 
-                style={{ width: `${(timeLeft / 30) * 100}%` }}
-            ></div>
+    <div className="space-y-6 flex flex-col h-full">
+      <div className="flex justify-between items-center">
+        <span className="text-xs font-bold uppercase text-purple-600 bg-purple-100 px-3 py-1 rounded">
+          Nivel {currentTriviaLevel} - Pregunta {currentQuestionIndex + 1}/{questions.length}
+        </span>
+        <div className={`flex items-center gap-2 px-3 py-1 rounded font-bold ${
+          timeLeft <= 10 ? 'bg-red-100 text-red-600' : 'bg-blue-100 text-blue-600'
+        }`}>
+          <Timer size={16} />
+          <span>{timeLeft}s</span>
         </div>
       </div>
 
-      <div className="bg-white p-6 rounded-2xl shadow-lg border border-purple-100 flex-grow flex items-center justify-center">
-        <h3 className="text-xl font-bold text-center text-gray-800">{currentQ.question}</h3>
+      <div className="bg-gradient-to-br from-purple-50 to-pink-50 p-6 rounded-2xl shadow-inner border-2 border-purple-100">
+        <p className="text-lg font-medium text-gray-800 text-center leading-relaxed">
+          {currentQuestion.question}
+        </p>
       </div>
 
-      <div className="grid grid-cols-1 gap-3">
-        {currentQ.options.map((opt, i) => (
-            <button 
-                key={i}
-                onClick={() => handleAnswer(i)}
-                className="w-full bg-white border-2 border-gray-100 p-4 rounded-xl text-left font-semibold text-gray-700 hover:bg-purple-50 hover:border-purple-200 active:scale-98 transition-all"
+      <div className="space-y-3 flex-grow">
+        {currentQuestion.options.map((option, index) => {
+          let buttonStyle = "bg-white border-2 border-gray-200 text-gray-700 hover:border-purple-300 hover:bg-purple-50";
+          
+          if (showResult) {
+            if (index === currentQuestion.correctIndex) {
+              buttonStyle = "bg-green-100 border-2 border-green-500 text-green-800";
+            } else if (index === selectedOption) {
+              buttonStyle = "bg-red-100 border-2 border-red-500 text-red-800";
+            } else {
+              buttonStyle = "bg-gray-100 border-2 border-gray-200 text-gray-500 opacity-50";
+            }
+          } else if (selectedOption === index) {
+            buttonStyle = "bg-purple-100 border-2 border-purple-500 text-purple-800 ring-2 ring-purple-200";
+          }
+
+          return (
+            <button
+              key={index}
+              onClick={() => handleOptionSelect(index)}
+              disabled={showResult}
+              className={`w-full p-4 rounded-xl font-medium text-left transition-all duration-200 ${buttonStyle}`}
             >
-                {opt}
+              {option}
             </button>
-        ))}
+          );
+        })}
       </div>
+
+      {!showResult ? (
+        <Button
+          onClick={handleSubmit}
+          disabled={selectedOption === null}
+          fullWidth
+          className="shadow-lg"
+        >
+          Confirmar Respuesta
+        </Button>
+      ) : (
+        <div className={`p-4 rounded-xl ${isCorrect ? 'bg-green-50' : 'bg-red-50'}`}>
+          <p className={`text-center font-bold mb-3 ${isCorrect ? 'text-green-700' : 'text-red-700'}`}>
+            {isCorrect ? '¡Correcto! +50 puntos' : 'Incorrecto - Respuesta correcta marcada'}
+          </p>
+          <Button onClick={handleNext} fullWidth>
+            {currentQuestionIndex < questions.length - 1 ? 'Siguiente Pregunta' : 'Ver Resultados'}
+          </Button>
+        </div>
+      )}
     </div>
   );
 };
