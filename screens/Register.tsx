@@ -71,6 +71,7 @@ export const Register: React.FC<Props> = ({ onRegister, onSwitchToLogin }) => {
     if (!validateForm()) return;
 
     setLoading(true);
+    setErrors({});
 
     try {
       // 1. Crear usuario en Supabase Auth
@@ -89,7 +90,10 @@ export const Register: React.FC<Props> = ({ onRegister, onSwitchToLogin }) => {
 
       const userId = authData.user.id;
 
-      // 2. Crear perfil en la tabla profiles
+      // 2. Esperar un poco para que Supabase procese el usuario
+      await new Promise(resolve => setTimeout(resolve, 1000));
+
+      // 3. Crear perfil en la tabla profiles
       const { error: profileError } = await supabase
         .from('profiles')
         .insert([{
@@ -100,12 +104,16 @@ export const Register: React.FC<Props> = ({ onRegister, onSwitchToLogin }) => {
           pharmacy_name: formData.pharmacyName,
           representative_name: formData.representativeName,
           privacy_accepted: false,
+          is_admin: false,
           created_at: new Date().toISOString()
         }]);
 
-      if (profileError) throw profileError;
+      if (profileError) {
+        console.error('Error creando perfil:', profileError);
+        throw new Error('Error al crear el perfil');
+      }
 
-      // 3. Crear game_state inicial
+      // 4. Crear game_state inicial
       const { error: gameStateError } = await supabase
         .from('game_state')
         .insert([{
@@ -118,19 +126,24 @@ export const Register: React.FC<Props> = ({ onRegister, onSwitchToLogin }) => {
         }]);
 
       if (gameStateError) {
-        console.error('Error creating game_state:', gameStateError);
-        // No lanzar error aquí, continuar con el registro
+        console.error('Error creando game_state:', gameStateError);
       }
 
-      // 4. Iniciar sesión automáticamente
+      // 5. Esperar otro poco antes de iniciar sesión
+      await new Promise(resolve => setTimeout(resolve, 500));
+
+      // 6. Iniciar sesión
       const { error: signInError } = await supabase.auth.signInWithPassword({
         email: formData.email,
         password: formData.password
       });
 
-      if (signInError) throw signInError;
+      if (signInError) {
+        console.error('Error iniciando sesión:', signInError);
+        throw new Error('Cuenta creada. Por favor inicia sesión manualmente.');
+      }
 
-      // 5. Llamar onRegister con los datos del usuario
+      // 7. Llamar a onRegister
       onRegister({
         id: userId,
         name: formData.fullName,
@@ -140,13 +153,21 @@ export const Register: React.FC<Props> = ({ onRegister, onSwitchToLogin }) => {
     } catch (error: any) {
       console.error('Error en registro:', error);
       
-      if (error.message?.includes('already registered')) {
-        setErrors({ email: 'Este email ya está registrado' });
-      } else if (error.message?.includes('email')) {
-        setErrors({ email: 'Error al crear la cuenta. Verifica el email.' });
-      } else {
-        setErrors({ general: 'Error al registrar usuario. Intenta nuevamente.' });
+      let errorMessage = 'Error al registrar usuario. Intenta nuevamente.';
+      
+      if (error.message?.includes('already registered') || error.message?.includes('already been registered')) {
+        errorMessage = 'Este email ya está registrado. Intenta iniciar sesión.';
+      } else if (error.message?.includes('Cuenta creada')) {
+        errorMessage = error.message;
+        // Redirigir al login después de 2 segundos
+        setTimeout(() => {
+          onSwitchToLogin();
+        }, 2000);
+      } else if (error.message) {
+        errorMessage = error.message;
       }
+      
+      setErrors({ general: errorMessage });
     } finally {
       setLoading(false);
     }
@@ -169,7 +190,7 @@ export const Register: React.FC<Props> = ({ onRegister, onSwitchToLogin }) => {
         </div>
 
         {errors.general && (
-          <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-4">
+          <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-4 text-sm">
             {errors.general}
           </div>
         )}
