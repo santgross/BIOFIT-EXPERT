@@ -101,7 +101,7 @@ export const Register: React.FC<Props> = ({ onRegister, onSwitchToLogin }) => {
         phone: formData.phone,
         pharmacy_name: formData.pharmacyName,
         representative_name: formData.representativeName,
-        privacy_accepted: false
+        representative_name: formData.representativeName
       };
 
       const { error: profileError } = await supabase
