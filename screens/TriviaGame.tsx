@@ -9,21 +9,61 @@ interface Props {
   onComplete: (score: number) => void;
 }
 
-export const TriviaGame: React.FC<Props> = ({ level, onComplete }) => {
+export const TriviaGame: React.FC<Props> = ({ level: userLevel, onComplete }) => {
   const [index, setIndex] = useState(0);
   const [timeLeft, setTimeLeft] = useState(30);
   const [score, setScore] = useState(0);
   const [isGameActive, setIsGameActive] = useState(false);
   const [isFinished, setIsFinished] = useState(false);
   const [showCelebration, setShowCelebration] = useState(false);
+  const [currentTriviaLevel, setCurrentTriviaLevel] = useState<1 | 2 | 3>(1);
+  const [loading, setLoading] = useState(true);
   const timerRef = useRef<number | null>(null);
 
-  const questions = DATA_BY_LEVEL.TRIVIA[level];
-  const currentQ = questions[index];
-
   useEffect(() => {
+    loadTriviaProgress();
     return () => stopTimer();
   }, []);
+
+  const loadTriviaProgress = async () => {
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        setCurrentTriviaLevel(1);
+        setLoading(false);
+        return;
+      }
+
+      const { data: gameState } = await supabase
+        .from('game_state')
+        .select('completed_games')
+        .eq('user_id', session.user.id)
+        .single();
+
+      const completed = gameState?.completed_games || [];
+
+      // Determinar qué nivel debe jugar
+      let levelToPlay: 1 | 2 | 3 = 1;
+      
+      if (completed.includes('trivia-level-1') && completed.includes('trivia-level-2')) {
+        levelToPlay = 3;
+      } else if (completed.includes('trivia-level-1')) {
+        levelToPlay = 2;
+      } else {
+        levelToPlay = 1;
+      }
+
+      setCurrentTriviaLevel(levelToPlay);
+      setLoading(false);
+    } catch (error) {
+      console.error('Error loading trivia progress:', error);
+      setCurrentTriviaLevel(1);
+      setLoading(false);
+    }
+  };
+
+  const questions = DATA_BY_LEVEL.TRIVIA[currentTriviaLevel];
+  const currentQ = questions[index];
 
   const startTimer = () => {
     if (timerRef.current) clearInterval(timerRef.current);
@@ -85,7 +125,7 @@ export const TriviaGame: React.FC<Props> = ({ level, onComplete }) => {
         .single();
 
       const completed = gameState?.completed_games || [];
-      const gameId = GAME_IDS.TRIVIA[level];
+      const gameId = GAME_IDS.TRIVIA[currentTriviaLevel];
 
       if (!completed.includes(gameId)) {
         const newCompleted = [...completed, gameId];
@@ -106,10 +146,20 @@ export const TriviaGame: React.FC<Props> = ({ level, onComplete }) => {
     }
   };
 
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-full">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Cargando trivia...</p>
+        </div>
+      </div>
+    );
+  }
+
   if (isFinished) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-purple-50 via-pink-50 to-purple-50 flex items-center justify-center p-4 relative overflow-hidden">
-        {/* Animated Stars */}
         {showCelebration && (
           <>
             <div className="absolute inset-0 overflow-hidden pointer-events-none">
@@ -130,18 +180,10 @@ export const TriviaGame: React.FC<Props> = ({ level, onComplete }) => {
             </div>
             <style>{`
               @keyframes float {
-                0% {
-                  transform: translateY(0) rotate(0deg);
-                  opacity: 1;
-                }
-                100% {
-                  transform: translateY(100vh) rotate(360deg);
-                  opacity: 0;
-                }
+                0% { transform: translateY(0) rotate(0deg); opacity: 1; }
+                100% { transform: translateY(100vh) rotate(360deg); opacity: 0; }
               }
-              .animate-float {
-                animation: float linear forwards;
-              }
+              .animate-float { animation: float linear forwards; }
             `}</style>
           </>
         )}
@@ -151,11 +193,11 @@ export const TriviaGame: React.FC<Props> = ({ level, onComplete }) => {
             <Timer size={48} />
           </div>
           <h2 className="text-3xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent mb-2">
-            ¡Nivel {level} Completado!
+            ¡Nivel {currentTriviaLevel} Completado!
           </h2>
           
           <div className="text-left max-w-xs mx-auto bg-gray-50 p-4 rounded-lg mb-6">
-            <p className="flex justify-between mb-2"><span>Nivel:</span> <span className="font-bold">{level}</span></p>
+            <p className="flex justify-between mb-2"><span>Nivel:</span> <span className="font-bold">{currentTriviaLevel}</span></p>
             <p className="flex justify-between mb-2"><span>Preguntas:</span> <span className="font-bold">{index + 1}/{questions.length}</span></p>
           </div>
 
@@ -173,20 +215,10 @@ export const TriviaGame: React.FC<Props> = ({ level, onComplete }) => {
 
         <style>{`
           @keyframes bounce-in {
-            0% {
-              transform: scale(0.3);
-              opacity: 0;
-            }
-            50% {
-              transform: scale(1.05);
-            }
-            70% {
-              transform: scale(0.9);
-            }
-            100% {
-              transform: scale(1);
-              opacity: 1;
-            }
+            0% { transform: scale(0.3); opacity: 0; }
+            50% { transform: scale(1.05); }
+            70% { transform: scale(0.9); }
+            100% { transform: scale(1); opacity: 1; }
           }
           .animate-bounce-in {
             animation: bounce-in 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55);
@@ -203,8 +235,8 @@ export const TriviaGame: React.FC<Props> = ({ level, onComplete }) => {
           <Zap size={64} />
         </div>
         <div>
-            <div className="text-xs font-bold uppercase text-purple-600 bg-purple-100 inline-block px-2 py-1 rounded mb-2">Nivel {level}</div>
-            <h2 className="text-2xl font-bold text-gray-800 mb-2">Trivia Flash</h2>
+            <div className="text-xs font-bold uppercase text-purple-600 bg-purple-100 inline-block px-2 py-1 rounded mb-2">Nivel {currentTriviaLevel}</div>
+            <h2 className="text-2xl font-bold text-gray-800 mb-2">Trivia Flash BIOFIT</h2>
             <p className="text-gray-600">Tienes 30 segundos para responder tantas preguntas como puedas.</p>
         </div>
         <Button onClick={startGame} fullWidth className="text-lg h-14 bg-purple-600 hover:bg-purple-700">
@@ -218,7 +250,7 @@ export const TriviaGame: React.FC<Props> = ({ level, onComplete }) => {
     <div className="flex flex-col h-full space-y-6">
       <div className="space-y-2">
         <div className="flex justify-between items-center font-bold text-gray-500 text-sm">
-            <span>Nivel {level} - Pregunta {index + 1}</span>
+            <span>Nivel {currentTriviaLevel} - Pregunta {index + 1}</span>
             <span className={`${timeLeft < 10 ? 'text-red-500 animate-pulse' : 'text-purple-600'} flex items-center gap-1`}>
                 <Timer size={16} /> {timeLeft}s
             </span>
