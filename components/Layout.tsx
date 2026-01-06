@@ -1,96 +1,107 @@
 import React from 'react';
-import { Trophy, LogOut, Home } from 'lucide-react';
 import { GameState } from '../types';
-import { LEVEL_THRESHOLDS, LOGO_URL } from '../constants';
+import { LEVEL_THRESHOLDS } from '../constants';
+import { Home, LogOut } from 'lucide-react';
 
-interface LayoutProps {
+interface Props {
   children: React.ReactNode;
   gameState: GameState;
   onGoHome: () => void;
   onLogout: () => void;
 }
 
-export const Layout: React.FC<LayoutProps> = ({ children, gameState, onGoHome, onLogout }) => {
-  const getLevelTitle = (points: number) => {
-    if (points >= LEVEL_THRESHOLDS.EXPERTO) return "Experto BIOFIT";
-    if (points >= LEVEL_THRESHOLDS.AVANZADO) return "Avanzado";
-    return "Principiante";
+export const Layout: React.FC<Props> = ({ children, gameState, onGoHome, onLogout }) => {
+  const getLevelName = (points: number): string => {
+    if (points >= LEVEL_THRESHOLDS.MAESTRO) return 'MAESTRO BIOFIT';
+    if (points >= LEVEL_THRESHOLDS.EXPERTO) return 'EXPERTO BIOFIT';
+    if (points >= LEVEL_THRESHOLDS.AVANZADO) return 'AVANZADO';
+    return 'PRINCIPIANTE';
   };
 
-  const progressToNext = () => {
-    if (gameState.points >= LEVEL_THRESHOLDS.EXPERTO) return 100;
-    if (gameState.points >= LEVEL_THRESHOLDS.AVANZADO) {
-        return ((gameState.points - LEVEL_THRESHOLDS.AVANZADO) / (LEVEL_THRESHOLDS.EXPERTO - LEVEL_THRESHOLDS.AVANZADO)) * 100;
-    }
-    return (gameState.points / LEVEL_THRESHOLDS.AVANZADO) * 100;
+  const getLevelColor = (points: number): string => {
+    if (points >= LEVEL_THRESHOLDS.MAESTRO) return 'bg-gradient-to-r from-purple-500 to-pink-500';
+    if (points >= LEVEL_THRESHOLDS.EXPERTO) return 'bg-gradient-to-r from-yellow-500 to-orange-500';
+    if (points >= LEVEL_THRESHOLDS.AVANZADO) return 'bg-gradient-to-r from-blue-500 to-cyan-500';
+    return 'bg-gradient-to-r from-green-500 to-emerald-500';
   };
+
+  const currentLevel = getLevelName(gameState.points);
+  const levelColor = getLevelColor(gameState.points);
+  const progressPercentage = Math.min((gameState.points / 1170) * 100, 100);
 
   return (
-    <div className="min-h-screen flex flex-col max-w-md mx-auto bg-white shadow-2xl overflow-hidden">
+    <div className="min-h-screen bg-gradient-to-br from-green-50 to-green-100">
       {/* Header */}
-      <header className="bg-[#00965E] text-white p-4 sticky top-0 z-50 shadow-md">
-        <div className="flex justify-between items-center mb-2">
-          <div className="flex items-center cursor-pointer" onClick={onGoHome}>
-             <img 
-                src={LOGO_URL} 
-                alt="BIOFIT" 
-                className="h-8 object-contain brightness-0 invert" 
-                onError={(e) => {
-                    e.currentTarget.style.display = 'none';
-                    e.currentTarget.nextElementSibling?.classList.remove('hidden');
-                }}
-             />
-             <div className="hidden font-black text-2xl tracking-tighter italic">BIOFIT<sup className="text-xs font-normal">®</sup></div>
-          </div>
-          
-          <div className="flex items-center gap-2">
-            <div className="flex items-center space-x-1 bg-white/20 px-3 py-1 rounded-full">
-                <Trophy size={16} className="text-yellow-300" />
-                <span className="font-bold">{gameState.points}</span>
+      <header className="bg-gradient-to-r from-[#00965E] to-green-700 text-white shadow-lg sticky top-0 z-50">
+        <div className="container mx-auto px-4 py-3">
+          <div className="flex items-center justify-between">
+            {/* Left: Logo */}
+            <div className="flex items-center gap-2">
+              <h1 className="text-xl font-bold">BIOFIT</h1>
             </div>
-            <button 
-                onClick={onGoHome} 
-                className="p-1.5 rounded-full hover:bg-white/20 text-white/80 hover:text-white transition-colors"
-                title="Volver al Menú"
-            >
+
+            {/* Right: Points, Home, Logout */}
+            <div className="flex items-center gap-3">
+              {/* Points Badge */}
+              <div className="bg-white/20 backdrop-blur-sm rounded-full px-4 py-2 flex items-center gap-2">
+                <span className="text-2xl">🏆</span>
+                <span className="font-bold text-lg">{gameState.points}</span>
+              </div>
+
+              {/* Home Button */}
+              <button
+                onClick={onGoHome}
+                className="bg-white/20 backdrop-blur-sm hover:bg-white/30 rounded-full p-2 transition-all duration-200"
+                title="Volver al inicio"
+              >
                 <Home size={20} />
-            </button>
-            <button 
-                onClick={onLogout} 
-                className="p-1.5 rounded-full hover:bg-white/20 text-white/80 hover:text-white transition-colors"
-                title="Cerrar Sesión"
-            >
+              </button>
+
+              {/* Logout Button */}
+              <button
+                onClick={onLogout}
+                className="bg-white/20 backdrop-blur-sm hover:bg-white/30 rounded-full p-2 transition-all duration-200"
+                title="Cerrar sesión"
+              >
                 <LogOut size={20} />
-            </button>
+              </button>
+            </div>
           </div>
-        </div>
-        
-        {/* Progress Bar */}
-        <div className="relative pt-1">
-            <div className="flex mb-1 items-center justify-between">
-                <span className="text-xs font-semibold inline-block py-1 px-2 uppercase rounded-full text-[#00965E] bg-white">
-                    {getLevelTitle(gameState.points)}
-                </span>
-                <div className="text-right">
-                    <span className="text-xs font-semibold inline-block text-white">
-                        {gameState.points} / {gameState.points < 400 ? 400 : 800}
-                    </span>
-                </div>
+
+          {/* Level Badge and Progress Bar */}
+          <div className="mt-3">
+            <div className="flex items-center justify-between mb-2">
+              <div className={`${levelColor} text-white text-xs font-bold px-3 py-1 rounded-full shadow-md`}>
+                {currentLevel}
+              </div>
+              <span className="text-sm text-white/90 font-semibold">{gameState.points} / 1170</span>
             </div>
-            <div className="overflow-hidden h-2 mb-1 text-xs flex rounded bg-[#007045]">
-                <div style={{ width: `${progressToNext()}%` }} className="shadow-none flex flex-col text-center whitespace-nowrap text-white justify-center bg-yellow-400 transition-all duration-500"></div>
+            
+            {/* Progress Bar */}
+            <div className="w-full bg-white/30 rounded-full h-3 backdrop-blur-sm overflow-hidden shadow-inner">
+              <div 
+                className="bg-gradient-to-r from-yellow-400 via-yellow-500 to-yellow-600 h-3 rounded-full transition-all duration-500 ease-out shadow-lg"
+                style={{ width: `${progressPercentage}%` }}
+              >
+                <div className="h-full w-full bg-white/20 animate-pulse"></div>
+              </div>
             </div>
+          </div>
         </div>
       </header>
 
       {/* Main Content */}
-      <main className="flex-grow p-4 bg-gray-50 overflow-y-auto">
+      <main className="container mx-auto px-4 py-6">
         {children}
       </main>
 
       {/* Footer */}
-      <footer className="bg-gray-100 p-4 text-center text-xs text-gray-500 border-t border-gray-200">
-        <p>© 2025 PharmaBrand. Entrenamiento Interno.</p>
+      <footer className="bg-white/50 backdrop-blur-sm border-t border-gray-200 py-4 mt-8">
+        <div className="container mx-auto px-4 text-center">
+          <p className="text-gray-600 text-sm">
+            © 2025 PharmaBrand. Entrenamiento Interno.
+          </p>
+        </div>
       </footer>
     </div>
   );
