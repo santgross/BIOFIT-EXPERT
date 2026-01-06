@@ -97,7 +97,7 @@ export const Certificate: React.FC<Props> = ({ userName, onBack }) => {
                 <div className="inline-block p-4 bg-gradient-to-br from-yellow-400 to-yellow-600 rounded-full mb-4 shadow-lg">
                   <Award size={48} className="text-white" />
                 </div>
-                <h1 className="text-5xl font-black text-[#00965E] mb-3">
+                <h1 className="text-3xl font-black text-[#00965E] mb-3">
                   CERTIFICADO DE EXCELENCIA
                 </h1>
                 <div className="w-40 h-1.5 bg-gradient-to-r from-[#00965E] to-yellow-500 mx-auto rounded-full"></div>
