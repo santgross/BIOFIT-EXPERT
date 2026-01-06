@@ -15,8 +15,8 @@ export const Home: React.FC<Props> = ({ onNavigate, unlockedBadges, completedGam
   // IDs de preguntas/actividades por módulo
   const MODULE_QUESTIONS = {
     [Screen.TRUE_FALSE]: ['tf1', 'tf2', 'tf3', 'tf4', 'tf5', 'tf6'],
-    [Screen.MATCH]: ['match-level-1', 'match-level-2'],
-    [Screen.SCENARIO]: ['scenario-level-2', 'scenario-level-3'],
+    [Screen.MATCH]: ['match-level-1', 'match-level-2', 'match-level-3'],
+    [Screen.SCENARIO]: ['scenario-level-1', 'scenario-level-2', 'scenario-level-3'],
     [Screen.TRIVIA]: ['trivia-level-1', 'trivia-level-2', 'trivia-level-3']
   };
 
@@ -94,8 +94,8 @@ export const Home: React.FC<Props> = ({ onNavigate, unlockedBadges, completedGam
       icon: '⚡',
       color: 'from-orange-500 to-orange-600',
       available: isModuleAvailable(Screen.MATCH),
-      totalQuestions: 2,
-      maxPoints: 220
+      totalQuestions: 3,
+      maxPoints: 370
     },
     {
       id: Screen.SCENARIO,
@@ -104,8 +104,8 @@ export const Home: React.FC<Props> = ({ onNavigate, unlockedBadges, completedGam
       icon: '⚠',
       color: 'from-red-500 to-red-600',
       available: isModuleAvailable(Screen.SCENARIO),
-      totalQuestions: 2,
-      maxPoints: 200
+      totalQuestions: 3,
+      maxPoints: 300
     },
     {
       id: Screen.TRIVIA,
@@ -115,7 +115,7 @@ export const Home: React.FC<Props> = ({ onNavigate, unlockedBadges, completedGam
       color: 'from-purple-500 to-purple-600',
       available: isModuleAvailable(Screen.TRIVIA),
       totalQuestions: 3,
-      maxPoints: 450
+      maxPoints: 200
     }
   ];
 
@@ -228,6 +228,38 @@ export const Home: React.FC<Props> = ({ onNavigate, unlockedBadges, completedGam
             })}
           </div>
         </div>
+
+        {/* Botón de Certificado (si completó todo) */}
+        {(() => {
+          const allCompleted = [
+            'true-false-complete',
+            'match-level-1', 'match-level-2', 'match-level-3',
+            'scenario-level-1', 'scenario-level-2', 'scenario-level-3',
+            'trivia-level-1', 'trivia-level-2', 'trivia-level-3'
+          ].every(id => completedGames.includes(id));
+
+          if (!allCompleted) return null;
+
+          return (
+            <div className="mt-8 mb-4">
+              <div className="bg-gradient-to-r from-yellow-400 via-yellow-500 to-yellow-600 rounded-2xl shadow-2xl p-8 text-center border-4 border-yellow-300 animate-pulse">
+                <div className="text-6xl mb-4">🏆</div>
+                <h2 className="text-3xl font-black text-white mb-3 drop-shadow-lg">
+                  ¡FELICITACIONES!
+                </h2>
+                <p className="text-white text-lg mb-6 drop-shadow">
+                  Has completado todos los módulos de entrenamiento
+                </p>
+                <button
+                  onClick={() => onNavigate(Screen.CERTIFICATE)}
+                  className="bg-white text-yellow-600 font-black text-xl py-4 px-8 rounded-xl shadow-xl hover:scale-110 transform transition-all duration-200 hover:shadow-2xl"
+                >
+                  🎓 Ver Mi Certificado
+                </button>
+              </div>
+            </div>
+          );
+        })()}
 
         {/* Botón de Admin (solo visible para administradores) */}
         {isAdmin && (
