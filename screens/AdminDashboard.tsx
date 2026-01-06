@@ -40,7 +40,7 @@ export const AdminDashboard: React.FC<Props> = ({ onBack }) => {
     try {
       setLoading(true);
 
-      // Obtener todos los usuarios con su progreso
+      // Obtener todos los perfiles
       const { data: profiles, error: profilesError } = await supabase
         .from('profiles')
         .select('*')
@@ -48,29 +48,36 @@ export const AdminDashboard: React.FC<Props> = ({ onBack }) => {
 
       if (profilesError) throw profilesError;
 
-      // Obtener el progreso de cada usuario
-      const usersWithProgress = await Promise.all(
-        profiles.map(async (profile) => {
-          const { data: gameState } = await supabase
-            .from('game_state')
-            .select('points, level, badges')
-            .eq('user_id', profile.user_id)
-            .single();
+      // Obtener todos los game_state de una sola vez
+      const { data: gameStates, error: gameStateError } = await supabase
+        .from('game_state')
+        .select('*');
 
-          return {
-            id: profile.user_id,
-            full_name: profile.full_name,
-            email: profile.email,
-            phone: profile.phone || 'N/A',
-            pharmacy_name: profile.pharmacy_name || 'N/A',
-            representative_name: profile.representative_name || 'N/A',
-            created_at: profile.created_at,
-            points: gameState?.points || 0,
-            level: gameState?.level || 1,
-            badges: gameState?.badges || []
-          };
-        })
-      );
+      if (gameStateError) throw gameStateError;
+
+      // Crear un mapa de game_state por user_id
+      const gameStateMap = new Map();
+      (gameStates || []).forEach((gs: any) => {
+        gameStateMap.set(gs.user_id, gs);
+      });
+
+      // Combinar los datos
+      const usersWithProgress = profiles.map((profile) => {
+        const gameState = gameStateMap.get(profile.user_id);
+
+        return {
+          id: profile.user_id,
+          full_name: profile.full_name,
+          email: profile.email,
+          phone: profile.phone || 'N/A',
+          pharmacy_name: profile.pharmacy_name || 'N/A',
+          representative_name: profile.representative_name || 'N/A',
+          created_at: profile.created_at,
+          points: gameState?.points || 0,
+          level: gameState?.level || 1,
+          badges: gameState?.badges || []
+        };
+      });
 
       setUsers(usersWithProgress);
 
