@@ -84,8 +84,7 @@ export const Home: React.FC<Props> = ({ onNavigate, unlockedBadges, completedGam
       icon: '✓',
       color: 'from-blue-500 to-blue-600',
       available: isModuleAvailable(Screen.TRUE_FALSE),
-      totalQuestions: 6,
-      maxPoints: 300
+      totalQuestions: 6
     },
     {
       id: Screen.MATCH,
@@ -94,8 +93,7 @@ export const Home: React.FC<Props> = ({ onNavigate, unlockedBadges, completedGam
       icon: '⚡',
       color: 'from-orange-500 to-orange-600',
       available: isModuleAvailable(Screen.MATCH),
-      totalQuestions: 3,
-      maxPoints: 370
+      totalQuestions: 3
     },
     {
       id: Screen.SCENARIO,
@@ -104,8 +102,7 @@ export const Home: React.FC<Props> = ({ onNavigate, unlockedBadges, completedGam
       icon: '⚠',
       color: 'from-red-500 to-red-600',
       available: isModuleAvailable(Screen.SCENARIO),
-      totalQuestions: 3,
-      maxPoints: 300
+      totalQuestions: 3
     },
     {
       id: Screen.TRIVIA,
@@ -114,8 +111,7 @@ export const Home: React.FC<Props> = ({ onNavigate, unlockedBadges, completedGam
       icon: '🎯',
       color: 'from-purple-500 to-purple-600',
       available: isModuleAvailable(Screen.TRIVIA),
-      totalQuestions: 3,
-      maxPoints: 200
+      totalQuestions: 3
     }
   ];
 
@@ -199,9 +195,6 @@ export const Home: React.FC<Props> = ({ onNavigate, unlockedBadges, completedGam
                               style={{ width: `${completed ? 100 : (completedCount / game.totalQuestions) * 100}%` }}
                             />
                           </div>
-                          <p className="text-xs text-gray-400 mt-1">
-                            Puntos máximos: {game.maxPoints}
-                          </p>
                         </div>
                       )}
 
