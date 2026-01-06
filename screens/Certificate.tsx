@@ -24,44 +24,34 @@ export const Certificate: React.FC<Props> = ({ userName, onBack }) => {
       <style>{`
         @page {
           size: A4 landscape;
-          margin: 0;
+          margin: 10mm;
         }
         
         @media print {
-          * {
-            -webkit-print-color-adjust: exact !important;
-            print-color-adjust: exact !important;
-          }
-          
           html, body {
-            width: 297mm;
-            height: 210mm;
             margin: 0;
             padding: 0;
-            overflow: hidden;
           }
           
           body * {
             visibility: hidden;
           }
           
-          .certificate-print-wrapper {
+          .certificate-print, .certificate-print * {
             visibility: visible;
+          }
+          
+          .certificate-print {
             position: fixed;
             left: 0;
             top: 0;
-            width: 297mm;
-            height: 210mm;
+            width: 100%;
+            height: 100%;
             margin: 0;
             padding: 0;
-            overflow: hidden;
-            page-break-after: avoid;
-            page-break-before: avoid;
-            page-break-inside: avoid;
-          }
-          
-          .certificate-print-wrapper * {
-            visibility: visible;
+            display: flex;
+            align-items: center;
+            justify-content: center;
           }
           
           .no-print {
@@ -83,76 +73,49 @@ export const Certificate: React.FC<Props> = ({ userName, onBack }) => {
             </p>
           </div>
 
-          {/* Certificate Wrapper for Print */}
-          <div className="certificate-print-wrapper">
-            {/* Certificate - Landscape Format */}
-            <div 
-              className="bg-white shadow-2xl border-4 border-[#00965E] flex flex-col items-center justify-center"
-              style={{ 
-                width: '297mm', 
-                height: '210mm',
-                padding: '20mm',
-                boxSizing: 'border-box'
-              }}
-            >
+          {/* Certificate - Landscape Format */}
+          <div 
+            className="certificate-print bg-white rounded-xl shadow-2xl p-10 mb-6 border-4 border-[#00965E]"
+          >
+            <div className="flex flex-col items-center justify-center">
               {/* Logo Header */}
-              <div className="mb-4">
+              <div className="mb-6">
                 <img 
                   src="/LOGO-BIOFIT-SIN-FONDO.png" 
                   alt="BIOFIT Logo" 
-                  style={{ height: '60px' }}
+                  className="h-20 mx-auto"
                 />
               </div>
 
               {/* Title with Icon */}
-              <div className="text-center mb-4">
+              <div className="text-center mb-6">
                 <div className="inline-block p-3 bg-gradient-to-br from-yellow-400 to-yellow-600 rounded-full mb-3 shadow-lg">
-                  <Award size={36} className="text-white" />
+                  <Award size={40} className="text-white" />
                 </div>
                 <h1 className="text-3xl font-black text-[#00965E] mb-2">
                   CERTIFICADO DE EXCELENCIA
                 </h1>
-                <div style={{ 
-                  width: '160px', 
-                  height: '4px', 
-                  background: 'linear-gradient(to right, #00965E, #EAB308, #00965E)',
-                  margin: '0 auto',
-                  borderRadius: '9999px'
-                }}></div>
+                <div className="w-40 h-1 bg-gradient-to-r from-[#00965E] to-yellow-500 mx-auto rounded-full"></div>
               </div>
 
               {/* Body */}
-              <div className="text-center mb-4" style={{ maxWidth: '700px' }}>
-                <p className="text-lg text-gray-600 mb-4">
+              <div className="text-center space-y-4 mb-6 w-full max-w-3xl">
+                <p className="text-lg text-gray-600">
                   Se certifica que
                 </p>
                 
-                <h2 
-                  className="text-3xl font-bold text-gray-900 py-3 mb-4"
-                  style={{ 
-                    borderTop: '2px solid #00965E',
-                    borderBottom: '2px solid #00965E'
-                  }}
-                >
+                <h2 className="text-3xl font-bold text-gray-900 py-3 border-b-2 border-t-2 border-[#00965E]">
                   {userName}
                 </h2>
 
-                <p className="text-sm text-gray-700 leading-relaxed mb-4 px-8">
+                <p className="text-sm text-gray-700 leading-relaxed px-8">
                   Ha completado exitosamente el programa <strong>BIOFIT EXPERT</strong>, 
                   demostrando dominio en los beneficios, ventajas competitivas y 
-                  técnicas de venta de <strong style={{ color: '#00965E' }}>BIOFIT®</strong>.
+                  técnicas de venta de <strong className="text-[#00965E]">BIOFIT®</strong>.
                 </p>
 
-                <div 
-                  className="rounded-lg p-3 border"
-                  style={{ 
-                    backgroundColor: '#f0fdf4',
-                    borderColor: '#00965E',
-                    maxWidth: '500px',
-                    margin: '0 auto'
-                  }}
-                >
-                  <p className="font-bold text-base" style={{ color: '#00965E' }}>
+                <div className="bg-green-50 rounded-lg p-3 max-w-xl mx-auto border border-green-200">
+                  <p className="text-[#00965E] font-bold text-base">
                     Embajador BIOFIT
                   </p>
                   <p className="text-xs text-gray-600 mt-1">
@@ -162,36 +125,22 @@ export const Certificate: React.FC<Props> = ({ userName, onBack }) => {
               </div>
 
               {/* Footer - Centered Date */}
-              <div 
-                className="text-center mt-4 pt-4"
-                style={{ 
-                  borderTop: '2px solid #e5e7eb',
-                  maxWidth: '600px',
-                  width: '100%'
-                }}
-              >
+              <div className="text-center mt-6 pt-4 border-t-2 border-gray-200 w-full max-w-2xl">
                 <p className="text-xs text-gray-500 uppercase mb-1">Fecha de Emisión</p>
                 <p className="font-bold text-gray-900 text-base">{today}</p>
               </div>
 
               {/* Brand Footer */}
-              <div 
-                className="text-center mt-3 pt-3"
-                style={{ 
-                  borderTop: '1px solid #e5e7eb',
-                  maxWidth: '600px',
-                  width: '100%'
-                }}
-              >
+              <div className="text-center mt-4 pt-3 border-t border-gray-200 w-full max-w-2xl">
                 <p className="text-xs text-gray-600">
-                  <strong style={{ color: '#00965E' }}>BIOFIT®</strong> es un producto de <strong>PharmaBrand S.A.</strong>
+                  <strong className="text-[#00965E]">BIOFIT®</strong> es un producto de <strong>PharmaBrand S.A.</strong>
                 </p>
               </div>
             </div>
           </div>
 
           {/* Action Buttons */}
-          <div className="no-print grid grid-cols-2 gap-4 max-w-2xl mx-auto mt-6">
+          <div className="no-print grid grid-cols-2 gap-4 max-w-2xl mx-auto">
             <Button 
               onClick={handlePrint}
               className="flex items-center justify-center gap-2 bg-[#00965E] hover:bg-green-700 text-white py-4 text-base shadow-lg"
