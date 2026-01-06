@@ -19,150 +19,290 @@ export const LEVEL_THRESHOLDS = {
 };
 
 export const BADGES: Badge[] = [
-  { id: 'mes1', name: 'Novato BIOFIT', description: 'Completaste tu primer mes de entrenamiento.', icon: '🌱', requiredPoints: 200 },
-  { id: 'mes3', name: 'Asesor de Salud', description: 'Dominas los beneficios metabólicos (Diabetes/Colesterol).', icon: '🩺', requiredPoints: 600 },
-  { id: 'mes6', name: 'Embajador PharmaBrand', description: 'Experto clínico en Psyllium Muciloide.', icon: '👑', requiredPoints: 1200 }
+  { id: 'mes1', name: 'Asesor BIOFIT', description: 'Dominas los fundamentos del producto', icon: '🌱', requiredPoints: 200 },
+  { id: 'mes3', name: 'Vendedor Experto', description: 'Manejas objeciones y técnicas de venta', icon: '🩺', requiredPoints: 600 },
+  { id: 'mes6', name: 'Embajador BIOFIT', description: 'Eres un maestro en posicionamiento de marca', icon: '👑', requiredPoints: 1200 }
 ];
 
-/* --- VERDADERO / FALSO --- */
+/* ========================================
+   NIVEL 1 - FUNDAMENTOS DE VENTA
+   ======================================== */
+
+/* --- VERDADERO / FALSO NIVEL 1 --- */
 const TF_LEVEL_1: QuestionTF[] = [
-  { id: 101, statement: "BIOFIT tiene una disolución superior del 98% frente al 47% de la competencia.", isTrue: true, explanation: "Correcto. Su tecnología evita grumos y mejora la experiencia del paciente." },
-  { id: 102, statement: "Cada 100g de BIOFIT contienen 47.7g de Psyllium Muciloide.", isTrue: true, explanation: "Correcto. Es una formulación de alta pureza." },
-  { id: 103, statement: "El precio PVP de BIOFIT es de $18.50.", isTrue: false, explanation: "Falso. El PVP sugerido es de $15.90, siendo el más competitivo." },
-  { id: 104, statement: "BIOFIT Original tiene el mismo éxito de sabor que el de Fresa.", isTrue: true, explanation: "Correcto. El 97% de evaluadores prefiere BIOFIT sobre otros Psyllium." },
-  { id: 105, statement: "BIOFIT rinde menos que los sachets de la competencia.", isTrue: false, explanation: "Falso. Su presentación de 300g ofrece mayor rendimiento y mejor precio por gramo." }
+  { 
+    id: 101, 
+    statement: "BIOFIT tiene un PVP de $15.90, siendo más económico que la competencia.", 
+    isTrue: true, 
+    explanation: "CORRECTO. BIOFIT PVP $15.90 vs competencia (ejemplo: Metamucil ~$17.50). Argumento de venta: 'Mejor precio con mejor calidad'." 
+  },
+  { 
+    id: 102, 
+    statement: "BIOFIT viene en 3 sabores: Fresa, Original y Naranja.", 
+    isTrue: true, 
+    explanation: "CORRECTO. Esta variedad te permite ofrecer opciones según preferencia del cliente. '¿Qué sabor prefiere?'" 
+  },
+  { 
+    id: 103, 
+    statement: "BIOFIT tiene 98% de aceptación en disolución vs 47% de la competencia.", 
+    isTrue: true, 
+    explanation: "CORRECTO. Argumento clave: 'Se disuelve mejor, sin grumos. El cliente no abandona el tratamiento'." 
+  },
+  { 
+    id: 104, 
+    statement: "BIOFIT solo sirve para el estreñimiento.", 
+    isTrue: false, 
+    explanation: "FALSO. BIOFIT es MULTIFUNCIONAL: estreñimiento + colesterol + glucosa + saciedad. '4 beneficios en 1 producto'." 
+  },
+  { 
+    id: 105, 
+    statement: "BIOFIT es apto para diabéticos porque está endulzado con Sucralosa.", 
+    isTrue: true, 
+    explanation: "CORRECTO. Argumento de venta: 'Seguro para diabéticos, sin azúcar añadida'. Amplía tu mercado objetivo." 
+  },
+  { 
+    id: 106, 
+    statement: "Cada envase de BIOFIT contiene 300g y rinde aproximadamente 1 mes.", 
+    isTrue: true, 
+    explanation: "CORRECTO. Dosis: 1 cucharada 1-3 veces al día. Argumento: 'Mejor rendimiento que sachets de la competencia'." 
+  }
 ];
 
+/* --- VERDADERO / FALSO NIVEL 2 --- */
 const TF_LEVEL_2: QuestionTF[] = [
-  { id: 201, statement: "La fibra insoluble es la que más aumenta la masa fecal por retener agua.", isTrue: true, explanation: "Correcto. Según la FEAD, la fibra insoluble incrementa el volumen de las heces." },
-  { id: 202, statement: "Se recomienda consumir de 2 a 5 raciones de legumbres a la semana.", isTrue: true, explanation: "Correcto. Las legumbres son una fuente primordial de fibra." },
-  { id: 203, statement: "BIOFIT solo debe usarse cuando ya hay estreñimiento severo.", isTrue: false, explanation: "Falso. BIOFIT también está indicado para la prevención y mejora de la salud digestiva general." },
-  { id: 204, statement: "La práctica de yoga o carrera suave ayuda a reducir el tiempo de digestión.", isTrue: true, explanation: "Correcto. La actividad física es un pilar fundamental para el tránsito intestinal." }
+  { 
+    id: 201, 
+    statement: "BIOFIT no solo alivia estreñimiento, también reduce el colesterol LDL.", 
+    isTrue: true, 
+    explanation: "CORRECTO. Estudios demuestran reducción del 6.7% de LDL. Argumento: 'Salud digestiva Y cardiovascular en un solo producto'." 
+  },
+  { 
+    id: 202, 
+    statement: "BIOFIT causa dependencia si se usa por más de 2 semanas.", 
+    isTrue: false, 
+    explanation: "FALSO. BIOFIT es fibra natural, NO laxante estimulante. Argumento: 'Uso diario seguro, sin dependencia'." 
+  },
+  { 
+    id: 203, 
+    statement: "El Psyllium de BIOFIT ayuda a controlar la glucosa en diabéticos.", 
+    isTrue: true, 
+    explanation: "CORRECTO. Ralentiza absorción de carbohidratos. Argumento: 'Ideal para pacientes diabéticos que buscan control natural'." 
+  },
+  { 
+    id: 204, 
+    statement: "BIOFIT tiene mejor textura que la competencia, evitando rechazo del paciente.", 
+    isTrue: true, 
+    explanation: "CORRECTO. 97% de aceptación sensorial. Argumento: 'Los pacientes no abandonan el tratamiento por mal sabor o textura'." 
+  },
+  { 
+    id: 205, 
+    statement: "BIOFIT prolonga la sensación de saciedad, ayudando al control de peso.", 
+    isTrue: true, 
+    explanation: "CORRECTO. Estudio Brum: saciedad hasta 4 horas. Argumento: 'Ayuda a controlar el apetito y el peso'." 
+  },
+  { 
+    id: 206, 
+    statement: "BIOFIT se debe tomar 2 horas antes o después de otros medicamentos.", 
+    isTrue: true, 
+    explanation: "CORRECTO. Evita interferencias en absorción. Consejo profesional que genera confianza con el cliente." 
+  }
 ];
 
+/* --- VERDADERO / FALSO NIVEL 3 --- */
 const TF_LEVEL_3: QuestionTF[] = [
-  { id: 301, statement: "El estudio de Anderson demostró que el Psyllium mejora los perfiles lipídicos séricos.", isTrue: true, explanation: "Correcto. Los niveles de LDL fueron 6.7% más bajos que con placebo." },
-  { id: 302, statement: "BIOFIT puede causar dependencia intestinal si se usa más de 6 días.", isTrue: false, explanation: "Falso. BIOFIT no es un laxante estimulante; regula de forma natural sin causar dependencia." },
-  { id: 303, statement: "El meta-análisis de 19 ensayos clínicos confirmó que el Psyllium reduce la HbA1c.", isTrue: true, explanation: "Correcto. Mejora significativamente el control glucémico en pacientes Tipo 2." },
-  { id: 304, statement: "El Psyllium reduce el hambre en un 39% según el estudio de Brum.", isTrue: true, explanation: "Correcto. Aumenta la sensación de saciedad significativamente." }
+  { 
+    id: 301, 
+    statement: "BIOFIT es seguro durante el embarazo, pero siempre debe consultarse al médico.", 
+    isTrue: true, 
+    explanation: "CORRECTO. Es seguro pero recomendamos consulta. Posicionamiento ético: 'Cuidamos la salud de mamá y bebé'." 
+  },
+  { 
+    id: 302, 
+    statement: "BIOFIT tiene respaldo de estudios clínicos para colesterol (Anderson) y glucosa (Cicero).", 
+    isTrue: true, 
+    explanation: "CORRECTO. Argumento premium: 'No solo lo decimos nosotros, la ciencia lo respalda'." 
+  },
+  { 
+    id: 303, 
+    statement: "BIOFIT está contraindicado en adultos mayores por su textura.", 
+    isTrue: false, 
+    explanation: "FALSO. Su textura homogénea es IDEAL para adultos mayores. Argumento: 'Fácil de tragar, sin grumos'." 
+  },
+  { 
+    id: 304, 
+    statement: "BIOFIT puede recomendarse como complemento nutricional diario, no solo cuando hay problema.", 
+    isTrue: true, 
+    explanation: "CORRECTO. Prevención > Tratamiento. Argumento: 'Úselo diariamente para mantener la salud digestiva'." 
+  },
+  { 
+    id: 305, 
+    statement: "BIOFIT sustituye completamente los medicamentos para diabetes o colesterol.", 
+    isTrue: false, 
+    explanation: "FALSO. Es COADYUVANTE, no sustituto. Posicionamiento ético: 'Complementa, no reemplaza el tratamiento médico'." 
+  },
+  { 
+    id: 306, 
+    statement: "La disolución superior de BIOFIT mejora la adherencia del paciente al tratamiento.", 
+    isTrue: true, 
+    explanation: "CORRECTO. Menos abandono = más ventas recurrentes. Argumento: 'El cliente regresa porque sí funciona y es agradable'." 
+  }
 ];
 
-/* --- MATCHING GAMES --- */
+/* ========================================
+   MATCHING GAMES - PROGRESIÓN INDEPENDIENTE
+   ======================================== */
+
+/* --- MATCH NIVEL 1: FUNDAMENTOS --- */
 const MATCH_LEVEL_1: MatchItem[] = [
-  { id: 'match1-1a', text: 'PVP BIOFIT', type: 'benefit', matchId: 'match1-1b' },
-  { id: 'match1-1b', text: '$15.90', type: 'system', matchId: 'match1-1a' },
-  { id: 'match1-2a', text: 'PVP Competencia (Rowe)', type: 'benefit', matchId: 'match1-2b' },
-  { id: 'match1-2b', text: '$17.50', type: 'system', matchId: 'match1-2a' },
-  { id: 'match1-3a', text: 'Aceptación Sabor', type: 'benefit', matchId: 'match1-3b' },
-  { id: 'match1-3b', text: '97% de evaluadores', type: 'system', matchId: 'match1-3a' },
-  { id: 'match1-4a', text: 'Disolución Superior', type: 'benefit', matchId: 'match1-4b' },
-  { id: 'match1-4b', text: '98% de éxito', type: 'system', matchId: 'match1-4a' }
+  { id: 'm1-1a', text: 'PVP BIOFIT', type: 'benefit', matchId: 'm1-1b' },
+  { id: 'm1-1b', text: '$15.90', type: 'system', matchId: 'm1-1a' },
+  { id: 'm1-2a', text: 'Sabores disponibles', type: 'benefit', matchId: 'm1-2b' },
+  { id: 'm1-2b', text: 'Fresa, Original, Naranja', type: 'system', matchId: 'm1-2a' },
+  { id: 'm1-3a', text: 'Contenido neto', type: 'benefit', matchId: 'm1-3b' },
+  { id: 'm1-3b', text: '300g por envase', type: 'system', matchId: 'm1-3a' },
+  { id: 'm1-4a', text: 'Ingrediente activo', type: 'benefit', matchId: 'm1-4b' },
+  { id: 'm1-4b', text: 'Psyllium Muciloide 47.7g/100g', type: 'system', matchId: 'm1-4a' }
 ];
 
+/* --- MATCH NIVEL 2: BENEFICIOS Y PERFILES --- */
 const MATCH_LEVEL_2: MatchItem[] = [
-  { id: 'match2-5a', text: 'Frutas diarias', type: 'benefit', matchId: 'match2-5b' },
-  { id: 'match2-5b', text: '3 piezas enteras', type: 'system', matchId: 'match2-5a' },
-  { id: 'match2-6a', text: 'Verduras diarias', type: 'benefit', matchId: 'match2-6b' },
-  { id: 'match2-6b', text: '2 raciones', type: 'system', matchId: 'match2-6a' },
-  { id: 'match2-7a', text: 'Cereales diarios', type: 'benefit', matchId: 'match2-7b' },
-  { id: 'match2-7b', text: '4 a 6 raciones', type: 'system', matchId: 'match2-7a' },
-  { id: 'match2-8a', text: 'Hidratación', type: 'benefit', matchId: 'match2-8b' },
-  { id: 'match2-8b', text: '1.5 a 2 litros', type: 'system', matchId: 'match2-8a' }
+  { id: 'm2-1a', text: 'Cliente con estreñimiento', type: 'benefit', matchId: 'm2-1b' },
+  { id: 'm2-1b', text: 'Regula tránsito intestinal sin dependencia', type: 'system', matchId: 'm2-1a' },
+  { id: 'm2-2a', text: 'Cliente diabético', type: 'benefit', matchId: 'm2-2b' },
+  { id: 'm2-2b', text: 'Apto diabéticos + control glucémico', type: 'system', matchId: 'm2-2a' },
+  { id: 'm2-3a', text: 'Cliente con colesterol alto', type: 'benefit', matchId: 'm2-3b' },
+  { id: 'm2-3b', text: 'Reduce colesterol LDL 6.7%', type: 'system', matchId: 'm2-3a' },
+  { id: 'm2-4a', text: 'Cliente que quiere bajar de peso', type: 'benefit', matchId: 'm2-4b' },
+  { id: 'm2-4b', text: 'Sensación de saciedad prolongada', type: 'system', matchId: 'm2-4a' }
 ];
 
-/* --- SCENARIOS (CASOS DE MOSTRADOR) --- */
+/* --- MATCH NIVEL 3: OBJECIONES Y TÉCNICAS --- */
+const MATCH_LEVEL_3: MatchItem[] = [
+  { id: 'm3-1a', text: 'Objeción: "Es muy caro"', type: 'benefit', matchId: 'm3-1b' },
+  { id: 'm3-1b', text: 'Respuesta: Mejor precio y 4 beneficios en 1', type: 'system', matchId: 'm3-1a' },
+  { id: 'm3-2a', text: 'Objeción: "No me gustan las fibras"', type: 'benefit', matchId: 'm3-2b' },
+  { id: 'm3-2b', text: 'Respuesta: 97% aceptación, sin grumos', type: 'system', matchId: 'm3-2a' },
+  { id: 'm3-3a', text: 'Objeción: "Ya probé otro y no funcionó"', type: 'benefit', matchId: 'm3-3b' },
+  { id: 'm3-3b', text: 'Respuesta: Disolución 98% vs 47% otros', type: 'system', matchId: 'm3-3a' },
+  { id: 'm3-4a', text: 'Objeción: "Causa dependencia"', type: 'benefit', matchId: 'm3-4b' },
+  { id: 'm3-4b', text: 'Respuesta: Fibra natural, uso diario seguro', type: 'system', matchId: 'm3-4a' }
+];
+
+/* ========================================
+   SCENARIOS - CASOS DE MOSTRADOR
+   ======================================== */
+
+/* --- SCENARIO NIVEL 2: CONSULTAS BÁSICAS --- */
 const SCENARIO_LEVEL_2: Scenario[] = [
   {
-    id: 221,
-    customer: "¿BIOFIT tiene el mismo efecto si lo mezclo con jugo en lugar de agua?",
-    clerkResponse: "Sí, puede mezclarlo con agua o jugos naturales, siempre bebiéndolo de inmediato para evitar que espese.",
+    id: 201,
+    customer: "¿Cuál es el precio de BIOFIT? Veo que hay varios similares más baratos.",
+    clerkResponse: "BIOFIT está en $15.90, y aunque hay opciones más económicas, BIOFIT le da 4 beneficios en 1: estreñimiento, colesterol, glucosa y saciedad. Es como comprar 4 productos en uno.",
     isCorrect: true,
     correctAction: "",
-    feedback: "¡Correcto! BIOFIT es versátil en su administración."
+    feedback: "¡EXCELENTE! Transformaste objeción de precio en argumento de valor. Cliente entiende que NO es caro, es completo."
   },
   {
-    id: 222,
-    customer: "Mi doctor me dijo que coma fibra pero me da muchos gases. ¿BIOFIT me hará lo mismo?",
-    clerkResponse: "BIOFIT tiene una pureza y disolución superior que minimiza la fermentación excesiva y gases comparado con otras fibras.",
+    id: 202,
+    customer: "¿Qué sabor me recomienda? No me gustan las cosas muy dulces.",
+    clerkResponse: "Tenemos 3 sabores: Fresa, Naranja y Original. El Original tiene sabor neutro, perfecto si prefiere algo sin dulce marcado. Los 3 se disuelven perfectamente sin grumos.",
     isCorrect: true,
     correctAction: "",
-    feedback: "Muy bien. La calidad del Psyllium influye directamente en la tolerancia."
+    feedback: "¡PERFECTO! Diste opciones + destacaste ventaja (sin grumos). Cliente siente que lo asesoraste bien."
   },
   {
-    id: 223,
-    customer: "¿BIOFIT sirve para limpiar el colon antes de una cirugía?",
-    clerkResponse: "No, BIOFIT es para el manejo del estreñimiento y salud metabólica, no es un preparador quirúrgico fuerte.",
+    id: 203,
+    customer: "¿Cuánto tiempo dura un envase? No quiero gastar mucho cada mes.",
+    clerkResponse: "Un envase de 300g dura aproximadamente 1 mes con uso diario. Es más rendidor que los sachets de la competencia y mejor precio por gramo.",
     isCorrect: true,
     correctAction: "",
-    feedback: "Correcto. Hay que diferenciar entre suplementos de fibra y laxantes osmóticos de choque."
+    feedback: "¡MUY BIEN! Diste información clara + comparaste con competencia. Argumento de economía a largo plazo."
   },
   {
-    id: 224,
-    customer: "Busco algo para mi papá de 80 años, le cuesta mucho tragar polvos con grumos.",
-    clerkResponse: "BIOFIT es ideal para él por su textura homogénea sin grumos, lo que facilita la deglución en adultos mayores.",
+    id: 204,
+    customer: "Busco algo para mi mamá de 75 años. Le cuesta tragar pastillas y polvos.",
+    clerkResponse: "BIOFIT es ideal para adultos mayores. Se disuelve completamente sin grumos, tiene textura suave y es fácil de tomar. Además, ayuda con el estreñimiento común en su edad.",
     isCorrect: true,
     correctAction: "",
-    feedback: "¡Excelente punto de venta! La adherencia en adultos mayores depende de la textura."
+    feedback: "¡EXCELENTE! Identificaste necesidad específica (textura) + beneficio adicional (estreñimiento en adultos mayores)."
   }
 ];
 
+/* --- SCENARIO NIVEL 3: OBJECIONES Y CASOS ESPECIALES --- */
 const SCENARIO_LEVEL_3: Scenario[] = [
   {
-    id: 331,
-    customer: "Estoy embarazada y tengo mucho estreñimiento. ¿Puedo tomar BIOFIT?",
-    clerkResponse: "El Psyllium es de acción mecánica y segura, pero siempre consulte a su ginecólogo antes de iniciar cualquier producto.",
+    id: 301,
+    customer: "Soy diabético. ¿Este producto tiene azúcar? Ya me prohibieron muchas cosas.",
+    clerkResponse: "¡Tranquilo! BIOFIT está endulzado con Sucralosa, es 100% seguro para diabéticos. Además, ayuda a controlar la glucosa porque ralentiza la absorción de carbohidratos.",
     isCorrect: true,
     correctAction: "",
-    feedback: "Correcto. Aunque es seguro, el protocolo ético es referir a consulta profesional en embarazo."
+    feedback: "¡PERFECTO! Tranquilizaste al cliente + diste beneficio adicional. Cliente ve que ENTIENDES su condición."
   },
   {
-    id: 332,
-    customer: "¿Por qué el estudio de Anderson es importante para mi colesterol?",
-    clerkResponse: "Porque demostró que BIOFIT reduce el LDL un 6.7% sin efectos secundarios, siendo un gran apoyo a su dieta.",
+    id: 302,
+    customer: "Ya compré Metamucil y no me gustó el sabor ni la textura. ¿Este es igual?",
+    clerkResponse: "Justamente BIOFIT se diferencia por eso. Tiene 97% de aceptación en sabor y 98% en disolución, vs 47% de otros productos. Los clientes no abandonan el tratamiento porque SÍ es agradable.",
     isCorrect: true,
     correctAction: "",
-    feedback: "¡Respuesta experta! Citar la evidencia clínica convence a pacientes informados."
+    feedback: "¡EXCELENTE! Convertiste mala experiencia previa en oportunidad de venta. Usaste datos específicos (97%, 98%)."
   },
   {
-    id: 333,
-    customer: "Si tomo BIOFIT, ¿puedo dejar de tomar mi pastilla para la diabetes?",
-    clerkResponse: "No, BIOFIT ayuda a controlar la glucosa (estudio Cicero), pero jamás debe suspender su tratamiento médico sin autorización del doctor.",
+    id: 303,
+    customer: "Mi doctor me recetó una estatina para el colesterol. ¿BIOFIT la reemplaza?",
+    clerkResponse: "BIOFIT NO reemplaza su medicamento, pero SÍ lo complementa. Puede reducir el colesterol LDL hasta 6.7% adicional de forma natural. Siempre mantenga su tratamiento médico.",
     isCorrect: true,
     correctAction: "",
-    feedback: "Responsabilidad ante todo. BIOFIT es un coadyuvante, no un sustituto farmacológico."
+    feedback: "¡PERFECTO! Posicionamiento ético correcto. Cliente confía en ti porque NO vendes milagros sino complemento real."
+  },
+  {
+    id: 304,
+    customer: "Estoy embarazada y con estreñimiento terrible. ¿Puedo tomar esto?",
+    clerkResponse: "El Psyllium es fibra natural muy segura, pero en embarazo siempre es mejor que consulte con su ginecólogo primero. Mientras tanto, puede aumentar agua y alimentos con fibra.",
+    isCorrect: true,
+    correctAction: "",
+    feedback: "¡EXCELENTE! Posicionamiento responsable. Cliente ve que priorizas su salud sobre la venta. Genera confianza."
   }
 ];
 
-/* --- TRIVIA QUESTIONS --- */
+/* ========================================
+   TRIVIA - CONOCIMIENTO RÁPIDO
+   ======================================== */
+
+/* --- TRIVIA NIVEL 1: CARACTERÍSTICAS --- */
 const TRIVIA_LEVEL_1: TriviaQuestion[] = [
-  { id: 411, question: "¿Cuál es la dosis recomendada para adultos?", options: ["1 cucharada 1 a 3 veces al día", "1 sachet a la semana", "Toda la lata en 3 días"], correctIndex: 0 },
-  { id: 412, question: "¿Qué sucede si esperas mucho para tomar BIOFIT tras mezclarlo?", options: ["Se evapora", "Se vuelve una masa gelatinosa difícil de tragar", "Cambia de color a azul"], correctIndex: 1 },
-  { id: 413, question: "BIOFIT es apto para diabéticos por ser endulzado con:", options: ["Miel", "Azúcar morena", "Sucralosa"], correctIndex: 2 },
-  { id: 414, question: "¿En cuántos sabores viene BIOFIT?", options: ["1 (Original)", "2 (Fresa y Naranja)", "3 (Fresa, Naranja y Original)"], correctIndex: 2 }
+  { id: 401, question: "¿Cuántos sabores tiene BIOFIT?", options: ["1 sabor", "2 sabores", "3 sabores"], correctIndex: 2 },
+  { id: 402, question: "¿Cuál es el PVP de BIOFIT?", options: ["$12.90", "$15.90", "$18.90"], correctIndex: 1 },
+  { id: 403, question: "¿Qué porcentaje de Psyllium tiene cada 100g de BIOFIT?", options: ["30.5g", "47.7g", "60.2g"], correctIndex: 1 },
+  { id: 404, question: "¿BIOFIT es apto para diabéticos?", options: ["No, tiene azúcar", "Sí, tiene Sucralosa", "Solo para diabéticos tipo 1"], correctIndex: 1 }
 ];
 
+/* --- TRIVIA NIVEL 2: VENTAJAS COMPETITIVAS --- */
 const TRIVIA_LEVEL_2: TriviaQuestion[] = [
-  { id: 421, question: "¿Qué beneficio extra ofrece la fibra insoluble según la FEAD?", options: ["Aumenta masa fecal y frecuencia", "Aclara la piel", "Quita el sueño"], correctIndex: 0 },
-  { id: 422, question: "Para educar el intestino, se recomienda ir al baño:", options: ["Solo cuando haya urgencia", "A la misma hora todos los días", "Cada 3 días"], correctIndex: 1 },
-  { id: 423, question: "¿Cuál es la postura recomendada para facilitar la deposición?", options: ["De pie", "Sentado normal", "Rodillas próximas al pecho (con banqueta)"], correctIndex: 2 },
-  { id: 424, question: "Una ración individual de legumbres equivale a unos:", options: ["10 gramos", "60 gramos en crudo", "1 kilogramo"], correctIndex: 1 }
+  { id: 501, question: "¿Qué porcentaje de aceptación tiene BIOFIT en disolución?", options: ["47%", "80%", "98%"], correctIndex: 2 },
+  { id: 502, question: "¿Cuántos beneficios ofrece BIOFIT?", options: ["1: solo estreñimiento", "2: estreñimiento y colesterol", "4: estreñimiento, colesterol, glucosa, saciedad"], correctIndex: 2 },
+  { id: 503, question: "¿BIOFIT causa dependencia?", options: ["Sí, después de 2 semanas", "No, es fibra natural", "Solo en adultos mayores"], correctIndex: 1 },
+  { id: 504, question: "¿Cuánto dura aproximadamente un envase de BIOFIT con uso diario?", options: ["2 semanas", "1 mes", "3 meses"], correctIndex: 1 }
 ];
 
+/* --- TRIVIA NIVEL 3: CONOCIMIENTO AVANZADO --- */
 const TRIVIA_LEVEL_3: TriviaQuestion[] = [
-  { id: 431, question: "En el estudio de Cicero, ¿cuánto bajó la glucemia en ayunas?", options: ["-2%", "-18%", "-50%"], correctIndex: 1 },
-  { id: 432, question: "¿Qué porcentaje de reducción de insulina mostró el grupo Psyllium?", options: ["-17%", "-5%", "0%"], correctIndex: 0 },
-  { id: 433, question: "¿Cuánto tiempo duró el estudio de Anderson para colesterol?", options: ["2 semanas", "1 mes", "26 semanas"], correctIndex: 2 },
-  { id: 434, question: "Según el estudio de Brum, ¿cuántas horas dura la sensación de saciedad?", options: ["1 hora", "4 horas", "12 horas"], correctIndex: 1 }
+  { id: 601, question: "¿Cuánto reduce BIOFIT el colesterol LDL según estudios?", options: ["3.2%", "6.7%", "12.5%"], correctIndex: 1 },
+  { id: 602, question: "¿Cuántas horas dura la sensación de saciedad con BIOFIT?", options: ["1 hora", "4 horas", "8 horas"], correctIndex: 1 },
+  { id: 603, question: "¿Qué debe hacer un cliente que toma otros medicamentos?", options: ["Tomar todo junto", "Espaciar 2 horas antes/después", "Solo tomar BIOFIT"], correctIndex: 1 },
+  { id: 604, question: "¿Por qué BIOFIT es mejor para adultos mayores?", options: ["Es más barato", "Textura sin grumos, fácil de tragar", "Tiene más sabor"], correctIndex: 1 }
 ];
+
+/* ========================================
+   EXPORT DATA
+   ======================================== */
 
 export const DATA_BY_LEVEL = {
   TF: { 1: TF_LEVEL_1, 2: TF_LEVEL_2, 3: TF_LEVEL_3 },
-  MATCH: { 1: MATCH_LEVEL_1, 2: MATCH_LEVEL_2, 3: [] },
+  MATCH: { 1: MATCH_LEVEL_1, 2: MATCH_LEVEL_2, 3: MATCH_LEVEL_3 },
   SCENARIO: { 1: [], 2: SCENARIO_LEVEL_2, 3: SCENARIO_LEVEL_3 },
   TRIVIA: { 1: TRIVIA_LEVEL_1, 2: TRIVIA_LEVEL_2, 3: TRIVIA_LEVEL_3 }
 };
 
-// IDs únicos por nivel para tracking de juegos completos
 export const GAME_IDS = {
   MATCH: {
     1: 'match-level-1',
