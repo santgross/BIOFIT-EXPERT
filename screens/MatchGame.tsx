@@ -10,15 +10,14 @@ interface Props {
   onComplete: (score: number) => void;
 }
 
-export const MatchGame: React.FC<Props> = ({ level: userLevel, onComplete }) => {
+export const MatchGame: React.FC<Props> = ({ level, onComplete }) => {
   const [items, setItems] = useState<MatchItem[]>([]);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [matchedIds, setMatchedIds] = useState<string[]>([]);
   const [wrongPair, setWrongPair] = useState<string[]>([]);
   const [attempts, setAttempts] = useState(0);
   const [showCelebration, setShowCelebration] = useState(false);
-  const [currentMatchLevel, setCurrentMatchLevel] = useState<1 | 2 | 3>(1);
-  const [loading, setLoading] = useState(true);
+  const [currentMatchLevel, setCurrentMatchLevel] = useState(1);
 
   useEffect(() => {
     loadMatchProgress();
@@ -28,7 +27,8 @@ export const MatchGame: React.FC<Props> = ({ level: userLevel, onComplete }) => 
     try {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) {
-        initializeLevel(1);
+        setCurrentMatchLevel(1);
+        loadLevel(1);
         return;
       }
 
@@ -39,38 +39,29 @@ export const MatchGame: React.FC<Props> = ({ level: userLevel, onComplete }) => 
         .single();
 
       const completed = gameState?.completed_games || [];
-
-      // Determinar qué nivel de Match debe jugar
-      let levelToPlay: 1 | 2 | 3 = 1;
       
+      let levelToLoad = 1;
       if (completed.includes('match-level-1') && completed.includes('match-level-2')) {
-        levelToPlay = 3; // Si completó 1 y 2, juega nivel 3
+        levelToLoad = 3;
       } else if (completed.includes('match-level-1')) {
-        levelToPlay = 2; // Si completó 1, juega nivel 2
-      } else {
-        levelToPlay = 1; // Primera vez, juega nivel 1
+        levelToLoad = 2;
       }
 
-      setCurrentMatchLevel(levelToPlay);
-      initializeLevel(levelToPlay);
+      setCurrentMatchLevel(levelToLoad);
+      loadLevel(levelToLoad);
     } catch (error) {
       console.error('Error loading match progress:', error);
-      initializeLevel(1);
+      setCurrentMatchLevel(1);
+      loadLevel(1);
     }
   };
 
-  const initializeLevel = (level: 1 | 2 | 3) => {
-    const levelItems = DATA_BY_LEVEL.MATCH[level];
-    if (levelItems.length === 0) {
-      // Si no hay datos, redirigir
-      setLoading(false);
-      return;
-    }
+  const loadLevel = (matchLevel: number) => {
+    const levelItems = DATA_BY_LEVEL.MATCH[matchLevel];
     const shuffled = [...levelItems].sort(() => Math.random() - 0.5);
     setItems(shuffled);
     setMatchedIds([]);
     setAttempts(0);
-    setLoading(false);
   };
 
   const handleItemClick = (id: string) => {
@@ -115,19 +106,24 @@ export const MatchGame: React.FC<Props> = ({ level: userLevel, onComplete }) => 
 
       const { data: gameState } = await supabase
         .from('game_state')
-        .select('completed_games')
+        .select('completed_games, points')
         .eq('user_id', session.user.id)
         .single();
 
       const completed = gameState?.completed_games || [];
       const gameId = GAME_IDS.MATCH[currentMatchLevel];
+      const alreadyCompleted = completed.includes(gameId);
 
-      if (!completed.includes(gameId)) {
+      if (!alreadyCompleted) {
         const newCompleted = [...completed, gameId];
+        const currentPoints = gameState?.points || 0;
         
         await supabase
           .from('game_state')
-          .update({ completed_games: newCompleted })
+          .update({ 
+            completed_games: newCompleted,
+            points: currentPoints + finalScore
+          })
           .eq('user_id', session.user.id);
       }
 
@@ -140,32 +136,6 @@ export const MatchGame: React.FC<Props> = ({ level: userLevel, onComplete }) => 
       onComplete(finalScore);
     }
   };
-
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center h-full">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">Cargando nivel...</p>
-        </div>
-      </div>
-    );
-  }
-
-  if (items.length === 0) {
-    return (
-      <div className="text-center py-10 space-y-6 bg-white rounded-2xl p-8 shadow-sm">
-        <div className="inline-block p-4 rounded-full bg-green-100 text-green-600 mb-4">
-          <Shuffle size={48} />
-        </div>
-        <h2 className="text-2xl font-bold text-gray-800">¡Felicidades!</h2>
-        <p className="text-gray-600">Has completado todos los niveles de Match de Conceptos.</p>
-        <Button onClick={() => onComplete(0)} fullWidth>
-          Volver al Menú
-        </Button>
-      </div>
-    );
-  }
 
   if (allMatched) {
     const minAttempts = items.length / 2;
@@ -195,10 +165,18 @@ export const MatchGame: React.FC<Props> = ({ level: userLevel, onComplete }) => 
             </div>
             <style>{`
               @keyframes float {
-                0% { transform: translateY(0) rotate(0deg); opacity: 1; }
-                100% { transform: translateY(100vh) rotate(360deg); opacity: 0; }
+                0% {
+                  transform: translateY(0) rotate(0deg);
+                  opacity: 1;
+                }
+                100% {
+                  transform: translateY(100vh) rotate(360deg);
+                  opacity: 0;
+                }
               }
-              .animate-float { animation: float linear forwards; }
+              .animate-float {
+                animation: float linear forwards;
+              }
             `}</style>
           </>
         )}
@@ -226,10 +204,20 @@ export const MatchGame: React.FC<Props> = ({ level: userLevel, onComplete }) => 
 
         <style>{`
           @keyframes bounce-in {
-            0% { transform: scale(0.3); opacity: 0; }
-            50% { transform: scale(1.05); }
-            70% { transform: scale(0.9); }
-            100% { transform: scale(1); opacity: 1; }
+            0% {
+              transform: scale(0.3);
+              opacity: 0;
+            }
+            50% {
+              transform: scale(1.05);
+            }
+            70% {
+              transform: scale(0.9);
+            }
+            100% {
+              transform: scale(1);
+              opacity: 1;
+            }
           }
           .animate-bounce-in {
             animation: bounce-in 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55);
@@ -242,10 +230,8 @@ export const MatchGame: React.FC<Props> = ({ level: userLevel, onComplete }) => 
   return (
     <div className="h-full flex flex-col">
       <div className="flex justify-between items-center mb-4">
-        <span className="text-xs font-bold uppercase text-yellow-600 bg-yellow-100 px-2 py-1 rounded">
-          Nivel {currentMatchLevel}
-        </span>
-        <h3 className="text-gray-600 font-medium">Conecta los conceptos</h3>
+        <span className="text-xs font-bold uppercase text-yellow-600 bg-yellow-100 px-2 py-1 rounded">Nivel {currentMatchLevel}</span>
+        <h3 className="text-gray-600 font-medium">Selecciona pares</h3>
       </div>
       
       <div className="grid grid-cols-2 gap-3">
