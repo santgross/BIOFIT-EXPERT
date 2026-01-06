@@ -27,7 +27,7 @@ export const Layout: React.FC<Props> = ({ children, gameState, onGoHome, onLogou
 
   const currentLevel = getLevelName(gameState.points);
   const levelColor = getLevelColor(gameState.points);
-  const progressPercentage = Math.min((gameState.points / 1170) * 100, 100);
+  const progressPercentage = Math.min((gameState.points / 2410) * 100, 100);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-green-50 to-green-100">
@@ -74,7 +74,7 @@ export const Layout: React.FC<Props> = ({ children, gameState, onGoHome, onLogou
               <div className={`${levelColor} text-white text-xs font-bold px-3 py-1 rounded-full shadow-md`}>
                 {currentLevel}
               </div>
-              <span className="text-sm text-white/90 font-semibold">{gameState.points} / 1170</span>
+              <span className="text-sm text-white/90 font-semibold">{gameState.points} / 2410</span>
             </div>
             
             {/* Progress Bar */}
