@@ -6,7 +6,8 @@ export enum Screen {
   SCENARIO = 'SCENARIO',
   TRIVIA = 'TRIVIA',
   BADGES = 'BADGES',
-  ADMIN = 'admin'
+  ADMIN = 'admin',
+  CERTIFICATE = 'CERTIFICATE'
 }
 
 export interface User {
