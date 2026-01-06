@@ -10,17 +10,10 @@ import { Register } from './screens/Register';
 import { Login } from './screens/Login';
 import { PrivacyConsent } from './components/PrivacyConsent';
 import { AdminDashboard } from './screens/AdminDashboard';
+import { Certificate } from './screens/Certificate';
 import { GameState, Screen, User } from './types';
 import { BADGES, LEVEL_THRESHOLDS } from './constants';
 import { supabase } from './supabaseClient';
-
-// Puntos máximos por módulo
-const MAX_POINTS_PER_MODULE = {
-  [Screen.TRUE_FALSE]: 300,
-  [Screen.MATCH]: 220,
-  [Screen.SCENARIO]: 200,
-  [Screen.TRIVIA]: 450
-};
 
 const TOTAL_MAX_POINTS = 1170;
 
@@ -44,7 +37,6 @@ export default function App() {
     return 1;
   };
 
-  // Verificar sesión al cargar
   useEffect(() => {
     checkSession();
   }, []);
@@ -65,7 +57,6 @@ export default function App() {
 
   const loadUserData = async (userId: string) => {
     try {
-      // Cargar perfil
       const { data: profile, error: profileError } = await supabase
         .from('profiles')
         .select('*')
@@ -74,7 +65,6 @@ export default function App() {
 
       if (profileError) throw profileError;
 
-      // Cargar estado del juego
       const { data: gameData, error: gameError } = await supabase
         .from('game_state')
         .select('*')
@@ -89,53 +79,41 @@ export default function App() {
         email: profile.email
       });
 
+      const currentPoints = gameData.points || 0;
+      const currentLevel = getCurrentLevel(currentPoints);
+
       setGameState({
-        points: gameData.points || 0,
-        level: gameData.level || 1,
+        points: currentPoints,
+        level: currentLevel,
         badges: gameData.badges || [],
         completedGames: gameData.completed_games || []
       });
 
-      // Verificar si es administrador
       setIsAdmin(profile.is_admin || false);
 
-      // Verificar si necesita aceptar política de privacidad
       if (!profile.privacy_accepted) {
         setShowPrivacyConsent(true);
       }
+
+      // Verificar si completó todo para mostrar certificado
+      checkForCertificate(gameData.completed_games || []);
     } catch (error) {
       console.error('Error loading user data:', error);
     }
   };
 
-  // Actualizar nivel cuando cambien los puntos
-  useEffect(() => {
-    if (!user) return;
+  const checkForCertificate = (completed: string[]) => {
+    const allModulesCompleted = [
+      'true-false-complete',
+      'match-level-1', 'match-level-2', 'match-level-3',
+      'scenario-level-1', 'scenario-level-2', 'scenario-level-3',
+      'trivia-level-1', 'trivia-level-2', 'trivia-level-3'
+    ].every(id => completed.includes(id));
 
-    const calculatedLevel = getCurrentLevel(gameState.points);
-    if (calculatedLevel !== gameState.level) {
-      setGameState(prev => ({ ...prev, level: calculatedLevel }));
-      updateGameStateInDB({ ...gameState, level: calculatedLevel });
+    if (allModulesCompleted) {
+      setCurrentScreen(Screen.CERTIFICATE);
     }
-  }, [gameState.points, user]);
-
-  // Actualizar badges cuando cambien los puntos
-  useEffect(() => {
-    if (!user) return;
-
-    const newBadges: string[] = [];
-    BADGES.forEach(badge => {
-      if (!gameState.badges.includes(badge.id) && gameState.points >= badge.requiredPoints) {
-        newBadges.push(badge.id);
-      }
-    });
-
-    if (newBadges.length > 0) {
-      const updatedBadges = [...gameState.badges, ...newBadges];
-      setGameState(prev => ({ ...prev, badges: updatedBadges }));
-      updateGameStateInDB({ ...gameState, badges: updatedBadges });
-    }
-  }, [gameState.points, user]);
+  };
 
   const updateGameStateInDB = async (state: GameState) => {
     if (!user) return;
@@ -206,10 +184,7 @@ export default function App() {
       return;
     }
 
-    // Limitar puntos al máximo total
-    const newPoints = Math.min(gameState.points + pointsEarned, TOTAL_MAX_POINTS);
-    
-    // Recargar datos desde Supabase para obtener el estado actualizado
+    // Recargar datos desde Supabase para obtener puntos actualizados
     await loadUserData(user.id);
     
     // Navegar al home
@@ -242,6 +217,8 @@ export default function App() {
         return <BadgesScreen gameState={gameState} onBack={() => setCurrentScreen(Screen.HOME)} />;
       case Screen.ADMIN:
         return <AdminDashboard onBack={() => setCurrentScreen(Screen.HOME)} />;
+      case Screen.CERTIFICATE:
+        return <Certificate userName={user?.name || 'Usuario'} onBack={() => setCurrentScreen(Screen.HOME)} />;
       default:
         return (
           <Home 
@@ -277,7 +254,6 @@ export default function App() {
     );
   }
 
-  // Mostrar popup de privacidad si es necesario
   if (user && showPrivacyConsent) {
     return <PrivacyConsent onAccept={handlePrivacyAccept} />;
   }
