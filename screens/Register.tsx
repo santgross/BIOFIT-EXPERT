@@ -12,10 +12,11 @@ interface Props {
 export const Register: React.FC<Props> = ({ onRegister, onSwitchToLogin }) => {
   const [formData, setFormData] = useState({
     fullName: '',
+    apellido: '',
     email: '',
-    phone: '',
-    pharmacyName: '',
-    representativeName: '',
+    celular: '',
+    farmacia: '',
+    nombreVisita: '',
     password: '',
     confirmPassword: ''
   });
@@ -26,7 +27,11 @@ export const Register: React.FC<Props> = ({ onRegister, onSwitchToLogin }) => {
     const newErrors: Record<string, string> = {};
 
     if (!formData.fullName.trim()) {
-      newErrors.fullName = 'El nombre completo es requerido';
+      newErrors.fullName = 'El nombre es requerido';
+    }
+
+    if (!formData.apellido.trim()) {
+      newErrors.apellido = 'El apellido es requerido';
     }
 
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -37,18 +42,18 @@ export const Register: React.FC<Props> = ({ onRegister, onSwitchToLogin }) => {
     }
 
     const phoneRegex = /^0\d{9}$/;
-    if (!formData.phone.trim()) {
-      newErrors.phone = 'El teléfono es requerido';
-    } else if (!phoneRegex.test(formData.phone)) {
-      newErrors.phone = 'El teléfono debe tener 10 dígitos y empezar con 0';
+    if (!formData.celular.trim()) {
+      newErrors.celular = 'El celular es requerido';
+    } else if (!phoneRegex.test(formData.celular)) {
+      newErrors.celular = 'El celular debe tener 10 dígitos y empezar con 0';
     }
 
-    if (!formData.pharmacyName.trim()) {
-      newErrors.pharmacyName = 'El nombre de la farmacia es requerido';
+    if (!formData.farmacia.trim()) {
+      newErrors.farmacia = 'El nombre de la farmacia es requerido';
     }
 
-    if (!formData.representativeName.trim()) {
-      newErrors.representativeName = 'El nombre del visitador es requerido';
+    if (!formData.nombreVisita.trim()) {
+      newErrors.nombreVisita = 'El nombre del visitador es requerido';
     }
 
     if (!formData.password) {
@@ -74,81 +79,66 @@ export const Register: React.FC<Props> = ({ onRegister, onSwitchToLogin }) => {
     setErrors({});
 
     try {
-      // 1. Registrar usuario
+      // 1. Crear usuario en Auth
       const { data: authData, error: authError } = await supabase.auth.signUp({
         email: formData.email,
         password: formData.password
       });
 
-      if (authError) {
-        if (authError.message.includes('already')) {
-          throw new Error('Este email ya está registrado');
-        }
-        throw authError;
-      }
-
-      if (!authData.user) {
-        throw new Error('No se pudo crear el usuario');
-      }
+      if (authError) throw authError;
+      if (!authData.user) throw new Error('No se pudo crear el usuario');
 
       const userId = authData.user.id;
 
-      // 2. Crear perfil
-      const profileData = {
-        user_id: userId,
-        full_name: formData.fullName,
-        email: formData.email,
-        phone: formData.phone,
-        pharmacy_name: formData.pharmacyName,
-        representative_name: formData.representativeName
-      };
-
+      // 2. Crear perfil con los nombres CORRECTOS de las columnas
       const { error: profileError } = await supabase
         .from('profiles')
-        .insert([profileData]);
+        .insert([{
+          user_id: userId,
+          full_name: formData.fullName,
+          apellido: formData.apellido,
+          email: formData.email,
+          celular: formData.celular,
+          farmacia: formData.farmacia,
+          nombre_visita: formData.nombreVisita,
+          privacy_accepted: false,
+          is_admin: false
+        }]);
 
-      if (profileError) {
-        console.error('Profile error:', profileError);
-        throw new Error('Error al crear perfil');
-      }
+      if (profileError) throw profileError;
 
       // 3. Crear game_state
-      const gameStateData = {
-        user_id: userId,
-        points: 0,
-        level: 1,
-        badges: [],
-        completed_games: []
-      };
-
       const { error: gameError } = await supabase
         .from('game_state')
-        .insert([gameStateData]);
+        .insert([{
+          user_id: userId,
+          points: 0,
+          level: 1,
+          badges: [],
+          completed_games: []
+        }]);
 
       if (gameError) {
         console.error('Game state error:', gameError);
       }
 
-      // 4. Esperar 1 segundo
-      await new Promise(r => setTimeout(r, 1000));
-
-      // 5. Iniciar sesión
+      // 4. Iniciar sesión
       await supabase.auth.signInWithPassword({
         email: formData.email,
         password: formData.password
       });
 
-      // 6. Registrar exitoso
+      // 5. Éxito
       onRegister({
         id: userId,
-        name: formData.fullName,
+        name: `${formData.fullName} ${formData.apellido}`,
         email: formData.email
       });
 
     } catch (error: any) {
-      console.error('Registration error:', error);
+      console.error('Error:', error);
       setErrors({ 
-        general: error.message || 'Error al registrar usuario' 
+        general: error.message || 'Error al registrar usuario'
       });
     } finally {
       setLoading(false);
@@ -180,7 +170,7 @@ export const Register: React.FC<Props> = ({ onRegister, onSwitchToLogin }) => {
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              Nombre Completo *
+              Nombre *
             </label>
             <input
               type="text"
@@ -189,11 +179,30 @@ export const Register: React.FC<Props> = ({ onRegister, onSwitchToLogin }) => {
               className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent ${
                 errors.fullName ? 'border-red-500' : 'border-gray-300'
               }`}
-              placeholder="Juan Pérez"
+              placeholder="Juan"
               disabled={loading}
             />
             {errors.fullName && (
               <p className="text-red-500 text-xs mt-1">{errors.fullName}</p>
+            )}
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Apellido *
+            </label>
+            <input
+              type="text"
+              value={formData.apellido}
+              onChange={(e) => handleChange('apellido', e.target.value)}
+              className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent ${
+                errors.apellido ? 'border-red-500' : 'border-gray-300'
+              }`}
+              placeholder="Pérez"
+              disabled={loading}
+            />
+            {errors.apellido && (
+              <p className="text-red-500 text-xs mt-1">{errors.apellido}</p>
             )}
           </div>
 
@@ -218,21 +227,21 @@ export const Register: React.FC<Props> = ({ onRegister, onSwitchToLogin }) => {
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              Teléfono *
+              Celular *
             </label>
             <input
               type="tel"
-              value={formData.phone}
-              onChange={(e) => handleChange('phone', e.target.value)}
+              value={formData.celular}
+              onChange={(e) => handleChange('celular', e.target.value)}
               className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent ${
-                errors.phone ? 'border-red-500' : 'border-gray-300'
+                errors.celular ? 'border-red-500' : 'border-gray-300'
               }`}
               placeholder="0987654321"
               maxLength={10}
               disabled={loading}
             />
-            {errors.phone && (
-              <p className="text-red-500 text-xs mt-1">{errors.phone}</p>
+            {errors.celular && (
+              <p className="text-red-500 text-xs mt-1">{errors.celular}</p>
             )}
           </div>
 
@@ -242,16 +251,16 @@ export const Register: React.FC<Props> = ({ onRegister, onSwitchToLogin }) => {
             </label>
             <input
               type="text"
-              value={formData.pharmacyName}
-              onChange={(e) => handleChange('pharmacyName', e.target.value)}
+              value={formData.farmacia}
+              onChange={(e) => handleChange('farmacia', e.target.value)}
               className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent ${
-                errors.pharmacyName ? 'border-red-500' : 'border-gray-300'
+                errors.farmacia ? 'border-red-500' : 'border-gray-300'
               }`}
               placeholder="Farmacia Cruz Azul"
               disabled={loading}
             />
-            {errors.pharmacyName && (
-              <p className="text-red-500 text-xs mt-1">{errors.pharmacyName}</p>
+            {errors.farmacia && (
+              <p className="text-red-500 text-xs mt-1">{errors.farmacia}</p>
             )}
           </div>
 
@@ -261,16 +270,16 @@ export const Register: React.FC<Props> = ({ onRegister, onSwitchToLogin }) => {
             </label>
             <input
               type="text"
-              value={formData.representativeName}
-              onChange={(e) => handleChange('representativeName', e.target.value)}
+              value={formData.nombreVisita}
+              onChange={(e) => handleChange('nombreVisita', e.target.value)}
               className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent ${
-                errors.representativeName ? 'border-red-500' : 'border-gray-300'
+                errors.nombreVisita ? 'border-red-500' : 'border-gray-300'
               }`}
               placeholder="María García"
               disabled={loading}
             />
-            {errors.representativeName && (
-              <p className="text-red-500 text-xs mt-1">{errors.representativeName}</p>
+            {errors.nombreVisita && (
+              <p className="text-red-500 text-xs mt-1">{errors.nombreVisita}</p>
             )}
           </div>
 
