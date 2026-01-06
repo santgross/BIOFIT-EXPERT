@@ -77,12 +77,7 @@ export const Register: React.FC<Props> = ({ onRegister, onSwitchToLogin }) => {
       // 1. Crear usuario en Supabase Auth
       const { data: authData, error: authError } = await supabase.auth.signUp({
         email: formData.email,
-        password: formData.password,
-        options: {
-          data: {
-            full_name: formData.fullName
-          }
-        }
+        password: formData.password
       });
 
       if (authError) throw authError;
@@ -90,10 +85,7 @@ export const Register: React.FC<Props> = ({ onRegister, onSwitchToLogin }) => {
 
       const userId = authData.user.id;
 
-      // 2. Esperar un poco para que Supabase procese el usuario
-      await new Promise(resolve => setTimeout(resolve, 1000));
-
-      // 3. Crear perfil en la tabla profiles
+      // 2. Crear perfil
       const { error: profileError } = await supabase
         .from('profiles')
         .insert([{
@@ -104,16 +96,12 @@ export const Register: React.FC<Props> = ({ onRegister, onSwitchToLogin }) => {
           pharmacy_name: formData.pharmacyName,
           representative_name: formData.representativeName,
           privacy_accepted: false,
-          is_admin: false,
           created_at: new Date().toISOString()
         }]);
 
-      if (profileError) {
-        console.error('Error creando perfil:', profileError);
-        throw new Error('Error al crear el perfil');
-      }
+      if (profileError) throw profileError;
 
-      // 4. Crear game_state inicial
+      // 3. Crear game_state
       const { error: gameStateError } = await supabase
         .from('game_state')
         .insert([{
@@ -126,24 +114,18 @@ export const Register: React.FC<Props> = ({ onRegister, onSwitchToLogin }) => {
         }]);
 
       if (gameStateError) {
-        console.error('Error creando game_state:', gameStateError);
+        console.error('Error game_state:', gameStateError);
       }
 
-      // 5. Esperar otro poco antes de iniciar sesión
-      await new Promise(resolve => setTimeout(resolve, 500));
-
-      // 6. Iniciar sesión
+      // 4. Iniciar sesión
       const { error: signInError } = await supabase.auth.signInWithPassword({
         email: formData.email,
         password: formData.password
       });
 
-      if (signInError) {
-        console.error('Error iniciando sesión:', signInError);
-        throw new Error('Cuenta creada. Por favor inicia sesión manualmente.');
-      }
+      if (signInError) throw signInError;
 
-      // 7. Llamar a onRegister
+      // 5. Llamar onRegister
       onRegister({
         id: userId,
         name: formData.fullName,
@@ -151,20 +133,12 @@ export const Register: React.FC<Props> = ({ onRegister, onSwitchToLogin }) => {
       });
 
     } catch (error: any) {
-      console.error('Error en registro:', error);
+      console.error('Error:', error);
       
-      let errorMessage = 'Error al registrar usuario. Intenta nuevamente.';
+      let errorMessage = 'Error al registrar usuario';
       
-      if (error.message?.includes('already registered') || error.message?.includes('already been registered')) {
-        errorMessage = 'Este email ya está registrado. Intenta iniciar sesión.';
-      } else if (error.message?.includes('Cuenta creada')) {
-        errorMessage = error.message;
-        // Redirigir al login después de 2 segundos
-        setTimeout(() => {
-          onSwitchToLogin();
-        }, 2000);
-      } else if (error.message) {
-        errorMessage = error.message;
+      if (error.message?.includes('already registered')) {
+        errorMessage = 'Este email ya está registrado';
       }
       
       setErrors({ general: errorMessage });
