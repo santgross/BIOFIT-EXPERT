@@ -8,9 +8,9 @@ interface UserData {
   id: string;
   full_name: string;
   email: string;
-  celular: string;
-  farmacia: string;
-  nombre_visitador: string;
+  phone: string;
+  pharmacy_name: string;
+  representative_name: string;
   created_at: string;
   points: number;
   level: number;
@@ -61,9 +61,9 @@ export const AdminDashboard: React.FC<Props> = ({ onBack }) => {
             id: profile.user_id,
             full_name: profile.full_name,
             email: profile.email,
-            celular: profile.celular || 'N/A',
-            farmacia: profile.farmacia || 'N/A',
-            nombre_visitador: profile.nombre_visitador || 'N/A',
+            phone: profile.phone || 'N/A',
+            pharmacy_name: profile.pharmacy_name || 'N/A',
+            representative_name: profile.representative_name || 'N/A',
             created_at: profile.created_at,
             points: gameState?.points || 0,
             level: gameState?.level || 1,
@@ -96,9 +96,9 @@ export const AdminDashboard: React.FC<Props> = ({ onBack }) => {
     const excelData = users.map(u => ({
       'Nombre': u.full_name,
       'Email': u.email,
-      'Celular': u.celular,
-      'Farmacia': u.farmacia,
-      'Visitador': u.nombre_visitador,
+      'Teléfono': u.phone,
+      'Farmacia': u.pharmacy_name,
+      'Visitador': u.representative_name,
       'Puntos': u.points,
       'Nivel': u.level === 1 ? 'Principiante' : u.level === 2 ? 'Avanzado' : 'Experto',
       'Badges': u.badges.length,
@@ -113,7 +113,7 @@ export const AdminDashboard: React.FC<Props> = ({ onBack }) => {
     const colWidths = [
       { wch: 25 }, // Nombre
       { wch: 30 }, // Email
-      { wch: 15 }, // Celular
+      { wch: 15 }, // Teléfono
       { wch: 30 }, // Farmacia
       { wch: 25 }, // Visitador
       { wch: 10 }, // Puntos
@@ -182,7 +182,7 @@ export const AdminDashboard: React.FC<Props> = ({ onBack }) => {
           </div>
           <Button onClick={exportToExcel} className="flex items-center justify-center shadow-lg whitespace-nowrap">
             <Download size={20} className="mr-2" />
-            Excel
+            Exportar Excel
           </Button>
         </div>
 
@@ -241,7 +241,7 @@ export const AdminDashboard: React.FC<Props> = ({ onBack }) => {
                 <tr>
                   <th className="px-6 py-4 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">Nombre</th>
                   <th className="px-6 py-4 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">Email</th>
-                  <th className="px-6 py-4 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">Celular</th>
+                  <th className="px-6 py-4 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">Teléfono</th>
                   <th className="px-6 py-4 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">Farmacia</th>
                   <th className="px-6 py-4 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">Visitador</th>
                   <th className="px-6 py-4 text-center text-xs font-bold text-gray-600 uppercase tracking-wider">Puntos</th>
@@ -267,13 +267,13 @@ export const AdminDashboard: React.FC<Props> = ({ onBack }) => {
                         <div className="text-sm text-gray-600">{user.email}</div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="text-sm text-gray-600">{user.celular}</div>
+                        <div className="text-sm text-gray-600">{user.phone}</div>
                       </td>
                       <td className="px-6 py-4">
-                        <div className="text-sm text-gray-600 max-w-xs truncate">{user.farmacia}</div>
+                        <div className="text-sm text-gray-600 max-w-xs truncate">{user.pharmacy_name}</div>
                       </td>
                       <td className="px-6 py-4">
-                        <div className="text-sm text-gray-600">{user.nombre_visitador}</div>
+                        <div className="text-sm text-gray-600">{user.representative_name}</div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-center">
                         <span className="text-lg font-bold text-gray-900">{user.points}</span>
