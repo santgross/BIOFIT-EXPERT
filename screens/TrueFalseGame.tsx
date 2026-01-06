@@ -1,85 +1,42 @@
 import React, { useState, useEffect } from 'react';
-import { CheckCircle, XCircle, Award, Trophy, Star } from 'lucide-react';
+import { CheckCircle, XCircle, Star } from 'lucide-react';
+import { DATA_BY_LEVEL } from '../constants';
+import { QuestionTF } from '../types';
 import { Button } from '../components/Button';
 import { supabase } from '../supabaseClient';
 
-interface Question {
-  id: string;
-  statement: string;
-  correctAnswer: boolean;
-  explanation: string;
-  level: 1 | 2 | 3;
-}
-
 interface Props {
   level: 1 | 2 | 3;
-  onComplete: (points: number) => void;
+  onComplete: (score: number) => void;
 }
 
-const QUESTIONS: Question[] = [
-  {
-    id: 'tf1',
-    statement: 'El Psyllium debe tomarse con poca agua para mejor absorción',
-    correctAnswer: false,
-    explanation: 'FALSO. El Psyllium debe tomarse con abundante agua (mínimo 250ml) para formar el gel mucilaginoso correctamente y evitar obstrucciones.',
-    level: 1
-  },
-  {
-    id: 'tf2',
-    statement: 'BIOFIT puede ayudar a regular el tránsito intestinal tanto en estreñimiento como en diarrea',
-    correctAnswer: true,
-    explanation: 'VERDADERO. El Psyllium tiene efecto regulador bidireccional: absorbe agua en diarrea y la retiene en estreñimiento.',
-    level: 1
-  },
-  {
-    id: 'tf3',
-    statement: 'Es seguro tomar BIOFIT durante el embarazo',
-    correctAnswer: true,
-    explanation: 'VERDADERO. El Psyllium es seguro durante el embarazo ya que no se absorbe sistémicamente y ayuda con el estreñimiento común en esta etapa.',
-    level: 1
-  },
-  {
-    id: 'tf4',
-    statement: 'BIOFIT se debe tomar junto con otros medicamentos sin ningún intervalo',
-    correctAnswer: false,
-    explanation: 'FALSO. Se recomienda tomar BIOFIT 2 horas antes o después de otros medicamentos para evitar interferencias en la absorción.',
-    level: 2
-  },
-  {
-    id: 'tf5',
-    statement: 'El Psyllium ayuda a controlar los niveles de colesterol',
-    correctAnswer: true,
-    explanation: 'VERDADERO. El Psyllium puede reducir el colesterol LDL hasta un 10% al unirse a los ácidos biliares y promover su excreción.',
-    level: 2
-  },
-  {
-    id: 'tf6',
-    statement: 'BIOFIT causa dependencia intestinal con el uso prolongado',
-    correctAnswer: false,
-    explanation: 'FALSO. A diferencia de los laxantes estimulantes, el Psyllium es una fibra natural que no causa dependencia y puede usarse a largo plazo.',
-    level: 3
-  }
-];
-
 export const TrueFalseGame: React.FC<Props> = ({ level, onComplete }) => {
+  const [availableQuestions, setAvailableQuestions] = useState<QuestionTF[]>([]);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [selectedAnswer, setSelectedAnswer] = useState<boolean | null>(null);
   const [showResult, setShowResult] = useState(false);
   const [isCorrect, setIsCorrect] = useState(false);
   const [score, setScore] = useState(0);
   const [completedIds, setCompletedIds] = useState<string[]>([]);
-  const [availableQuestions, setAvailableQuestions] = useState<Question[]>([]);
   const [gameFinished, setGameFinished] = useState(false);
   const [showCelebration, setShowCelebration] = useState(false);
 
   useEffect(() => {
-    loadCompletedQuestions();
-  }, []);
+    loadQuestions();
+  }, [level]);
 
-  const loadCompletedQuestions = async () => {
+  const loadQuestions = async () => {
     try {
       const { data: { session } } = await supabase.auth.getSession();
-      if (!session) return;
+      if (!session) {
+        const allQuestions = [
+          ...DATA_BY_LEVEL.TF[1],
+          ...DATA_BY_LEVEL.TF[2],
+          ...DATA_BY_LEVEL.TF[3]
+        ];
+        setAvailableQuestions(allQuestions);
+        return;
+      }
 
       const { data: gameState } = await supabase
         .from('game_state')
@@ -90,117 +47,145 @@ export const TrueFalseGame: React.FC<Props> = ({ level, onComplete }) => {
       const completed = gameState?.completed_games || [];
       setCompletedIds(completed);
 
-      // Filtrar preguntas: del nivel actual o inferior, no completadas
-      const filtered = QUESTIONS.filter(q => 
-        q.level <= level && !completed.includes(q.id)
-      );
+      const allQuestions = [
+        ...DATA_BY_LEVEL.TF[1],
+        ...DATA_BY_LEVEL.TF[2],
+        ...DATA_BY_LEVEL.TF[3]
+      ];
 
-      setAvailableQuestions(filtered);
-
-      if (filtered.length === 0) {
-        setGameFinished(true);
-        setShowCelebration(true);
+      const remaining = allQuestions.filter(q => !completed.includes(`tf${q.id}`));
+      
+      if (remaining.length === 0) {
+        setAvailableQuestions(allQuestions);
+      } else {
+        setAvailableQuestions(remaining);
       }
     } catch (error) {
-      console.error('Error loading completed questions:', error);
+      console.error('Error loading questions:', error);
+      const allQuestions = [
+        ...DATA_BY_LEVEL.TF[1],
+        ...DATA_BY_LEVEL.TF[2],
+        ...DATA_BY_LEVEL.TF[3]
+      ];
+      setAvailableQuestions(allQuestions);
     }
   };
 
   const handleAnswer = (answer: boolean) => {
+    if (showResult) return;
+    
+    const currentQuestion = availableQuestions[currentQuestionIndex];
+    const correct = answer === currentQuestion.isTrue;
+    
     setSelectedAnswer(answer);
-    const correct = answer === availableQuestions[currentQuestionIndex].correctAnswer;
     setIsCorrect(correct);
     setShowResult(true);
-
-    if (correct) {
-      setScore(score + 50);
-    }
   };
 
-  const handleNext = async () => {
-    if (isCorrect) {
-      // Marcar pregunta como completada
-      const questionId = availableQuestions[currentQuestionIndex].id;
-      const newCompleted = [...completedIds, questionId];
-      
-      try {
-        const { data: { session } } = await supabase.auth.getSession();
-        if (session) {
-          await supabase
-            .from('game_state')
-            .update({ completed_games: newCompleted })
-            .eq('user_id', session.user.id);
-        }
-      } catch (error) {
-        console.error('Error updating completed games:', error);
-      }
-
-      setCompletedIds(newCompleted);
-
-      // Remover pregunta de disponibles
-      const newAvailable = availableQuestions.filter((_, idx) => idx !== currentQuestionIndex);
-      setAvailableQuestions(newAvailable);
-
-      // Verificar si completó TODAS las preguntas del nivel
-      const allQuestionsForLevel = QUESTIONS.filter(q => q.level <= level);
-      const allCompleted = allQuestionsForLevel.every(q => newCompleted.includes(q.id));
-
-      if (allCompleted) {
-        // Marcar el módulo completo como finalizado
-        await markModuleComplete(newCompleted);
-        setGameFinished(true);
-        setShowCelebration(true);
-      } else if (newAvailable.length === 0) {
-        // Ya no hay más preguntas disponibles en esta sesión
-        setGameFinished(true);
-        setShowCelebration(true);
-      } else {
-        setCurrentQuestionIndex(0);
-        setSelectedAnswer(null);
-        setShowResult(false);
-      }
-    } else {
-      // Si falló, reiniciar para intentar la misma pregunta de nuevo
-      setSelectedAnswer(null);
+  const handleNextQuestion = async () => {
+    if (!isCorrect) {
       setShowResult(false);
+      setSelectedAnswer(null);
+      return;
     }
-  };
 
-  const markModuleComplete = async (currentCompleted: string[]) => {
+    const currentQuestion = availableQuestions[currentQuestionIndex];
+
     try {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) return;
 
-      // Agregar el ID del módulo completo si no existe
-      const moduleId = 'true-false-complete';
-      if (!currentCompleted.includes(moduleId)) {
-        const withModule = [...currentCompleted, moduleId];
-        
+      // Verificar si ya está completada
+      const { data: gameState } = await supabase
+        .from('game_state')
+        .select('completed_games, points')
+        .eq('user_id', session.user.id)
+        .single();
+
+      const completed = gameState?.completed_games || [];
+      const questionId = `tf${currentQuestion.id}`;
+      const alreadyCompleted = completed.includes(questionId);
+
+      // Solo guardar y sumar puntos si NO está completada
+      if (!alreadyCompleted) {
+        const newCompleted = [...completed, questionId];
+        const currentPoints = gameState?.points || 0;
+
         await supabase
           .from('game_state')
-          .update({ completed_games: withModule })
+          .update({ 
+            completed_games: newCompleted,
+            points: currentPoints + 50
+          })
           .eq('user_id', session.user.id);
+
+        setScore(s => s + 50);
+        setCompletedIds(newCompleted);
       }
     } catch (error) {
-      console.error('Error marking module complete:', error);
+      console.error('Error saving progress:', error);
+    }
+
+    if (currentQuestionIndex < availableQuestions.length - 1) {
+      setCurrentQuestionIndex(prev => prev + 1);
+      setShowResult(false);
+      setSelectedAnswer(null);
+    } else {
+      await markModuleComplete();
     }
   };
 
-  const handleFinish = () => {
-    onComplete(score);
+  const markModuleComplete = async () => {
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        setGameFinished(true);
+        return;
+      }
+
+      const { data: gameState } = await supabase
+        .from('game_state')
+        .select('completed_games')
+        .eq('user_id', session.user.id)
+        .single();
+
+      const completed = gameState?.completed_games || [];
+      
+      if (!completed.includes('true-false-complete')) {
+        const newCompleted = [...completed, 'true-false-complete'];
+        
+        await supabase
+          .from('game_state')
+          .update({ completed_games: newCompleted })
+          .eq('user_id', session.user.id);
+      }
+
+      setGameFinished(true);
+      setShowCelebration(true);
+    } catch (error) {
+      console.error('Error marking module complete:', error);
+      setGameFinished(true);
+    }
   };
 
-  if (gameFinished) {
-    const allQuestionsForLevel = QUESTIONS.filter(q => q.level <= level);
-    const allCompleted = allQuestionsForLevel.every(q => completedIds.includes(q.id));
-
+  if (availableQuestions.length === 0) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-green-50 via-blue-50 to-purple-50 flex items-center justify-center p-4 relative overflow-hidden">
-        {/* Animated Background Elements */}
+      <div className="flex items-center justify-center h-64">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#00965E] mx-auto mb-4"></div>
+          <p className="text-gray-600">Cargando preguntas...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (gameFinished) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-cyan-50 to-blue-50 flex items-center justify-center p-4 relative overflow-hidden">
         {showCelebration && (
           <>
             <div className="absolute inset-0 overflow-hidden pointer-events-none">
-              {[...Array(20)].map((_, i) => (
+              {[...Array(30)].map((_, i) => (
                 <div
                   key={i}
                   className="absolute animate-float"
@@ -211,7 +196,7 @@ export const TrueFalseGame: React.FC<Props> = ({ level, onComplete }) => {
                     animationDuration: `${3 + Math.random() * 2}s`
                   }}
                 >
-                  <Star className="text-yellow-400" size={20 + Math.random() * 20} fill="currentColor" />
+                  <Star className="text-blue-400" size={20 + Math.random() * 20} fill="currentColor" />
                 </div>
               ))}
             </div>
@@ -234,45 +219,22 @@ export const TrueFalseGame: React.FC<Props> = ({ level, onComplete }) => {
         )}
 
         <div className="bg-white rounded-3xl shadow-2xl p-8 max-w-md w-full text-center relative z-10 transform animate-bounce-in">
-          <div className="relative">
-            <Trophy className="w-24 h-24 text-yellow-500 mx-auto mb-4 animate-pulse" />
-            <div className="absolute -top-2 -right-2 w-8 h-8 bg-yellow-400 rounded-full animate-ping"></div>
+          <div className="inline-block p-4 rounded-full bg-green-100 text-[#00965E] mb-4 animate-bounce">
+            <CheckCircle size={48} />
           </div>
-          
-          <h2 className="text-4xl font-bold bg-gradient-to-r from-green-600 to-blue-600 bg-clip-text text-transparent mb-2">
-            {allCompleted ? '¡Módulo Completado!' : '¡Buen Trabajo!'}
+          <h2 className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-cyan-600 bg-clip-text text-transparent mb-2">
+            ¡Módulo Completado!
           </h2>
-          <p className="text-xl text-gray-600 mb-6">
-            {allCompleted 
-              ? 'Has completado todas las preguntas del módulo' 
-              : 'Sigue practicando para completar el módulo'
-            }
-          </p>
+          <p className="text-gray-600 mb-4">Excelente trabajo dominando los conceptos de BIOFIT</p>
           
-          <div className="bg-gradient-to-br from-green-50 to-blue-50 rounded-2xl p-6 mb-6 border-2 border-green-200">
-            <Award className="w-12 h-12 text-green-600 mx-auto mb-2" />
+          <div className="bg-gradient-to-br from-blue-50 to-cyan-50 rounded-2xl p-6 mb-6 border-2 border-blue-200">
             <p className="text-gray-700 text-lg mb-2 font-semibold">Puntos Ganados</p>
-            <p className="text-6xl font-black bg-gradient-to-r from-green-600 to-blue-600 bg-clip-text text-transparent">
+            <p className="text-6xl font-black bg-gradient-to-r from-blue-600 to-cyan-600 bg-clip-text text-transparent">
               {score}
             </p>
           </div>
 
-          <div className="space-y-2 mb-6">
-            <div className="flex items-center justify-center text-green-600">
-              <CheckCircle size={20} className="mr-2" />
-              <span className="font-semibold">
-                {completedIds.filter(id => QUESTIONS.some(q => q.id === id)).length} de {allQuestionsForLevel.length} preguntas completadas
-              </span>
-            </div>
-            {allCompleted && (
-              <div className="flex items-center justify-center text-green-600">
-                <CheckCircle size={20} className="mr-2" />
-                <span className="font-semibold">Módulo Completado ✓</span>
-              </div>
-            )}
-          </div>
-
-          <Button onClick={handleFinish} className="w-full py-4 text-lg shadow-lg hover:shadow-xl transition-all">
+          <Button onClick={() => onComplete(score)} fullWidth className="shadow-lg">
             Continuar al Menú
           </Button>
         </div>
@@ -302,121 +264,71 @@ export const TrueFalseGame: React.FC<Props> = ({ level, onComplete }) => {
     );
   }
 
-  if (availableQuestions.length === 0) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-blue-100 flex items-center justify-center p-4">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-xl font-semibold text-gray-600">Cargando preguntas...</p>
-        </div>
-      </div>
-    );
-  }
-
   const currentQuestion = availableQuestions[currentQuestionIndex];
-  const allQuestionsForLevel = QUESTIONS.filter(q => q.level <= level);
-  const progress = ((completedIds.filter(id => QUESTIONS.some(q => q.id === id)).length) / allQuestionsForLevel.length) * 100;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-blue-100 p-4">
-      <div className="max-w-2xl mx-auto pt-8">
-        {/* Progress Bar */}
-        <div className="bg-white rounded-lg p-4 mb-6 shadow-md">
-          <div className="flex justify-between items-center mb-2">
-            <span className="text-sm font-medium text-gray-600">Progreso</span>
-            <span className="text-sm font-bold text-blue-600">{Math.round(progress)}%</span>
-          </div>
-          <div className="w-full bg-gray-200 rounded-full h-3">
-            <div 
-              className="bg-gradient-to-r from-blue-500 to-green-500 h-3 rounded-full transition-all duration-500"
-              style={{ width: `${progress}%` }}
-            />
-          </div>
-          <p className="text-xs text-gray-500 mt-2">
-            {completedIds.filter(id => QUESTIONS.some(q => q.id === id)).length} de {allQuestionsForLevel.length} completadas
-          </p>
-        </div>
-
-        {/* Question Card */}
-        <div className="bg-white rounded-2xl shadow-xl p-8">
-          <h2 className="text-2xl font-bold text-gray-800 mb-6 text-center">
-            {currentQuestion.statement}
-          </h2>
-
-          {!showResult ? (
-            <div className="grid grid-cols-2 gap-4">
-              <button
-                onClick={() => handleAnswer(true)}
-                className="bg-gradient-to-br from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white py-6 px-8 rounded-xl font-bold text-xl transition-all transform hover:scale-105 shadow-lg"
-              >
-                ✓ Verdadero
-              </button>
-              <button
-                onClick={() => handleAnswer(false)}
-                className="bg-gradient-to-br from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white py-6 px-8 rounded-xl font-bold text-xl transition-all transform hover:scale-105 shadow-lg"
-              >
-                ✗ Falso
-              </button>
-            </div>
-          ) : (
-            <div className="space-y-6">
-              {/* Result Badge */}
-              <div className={`flex items-center justify-center p-4 rounded-xl ${
-                isCorrect ? 'bg-green-50 border-2 border-green-200' : 'bg-red-50 border-2 border-red-200'
-              }`}>
-                {isCorrect ? (
-                  <>
-                    <CheckCircle className="text-green-600 mr-2" size={28} />
-                    <span className="text-2xl font-bold text-green-600">¡Correcto!</span>
-                  </>
-                ) : (
-                  <>
-                    <XCircle className="text-red-600 mr-2" size={28} />
-                    <span className="text-2xl font-bold text-red-600">Incorrecto</span>
-                  </>
-                )}
-              </div>
-
-              {/* Explanation */}
-              <div className={`p-6 rounded-xl border-2 ${
-                isCorrect ? 'bg-green-50 border-green-200' : 'bg-red-50 border-red-200'
-              }`}>
-                <p className="text-gray-700 text-base leading-relaxed">
-                  {currentQuestion.explanation}
-                </p>
-              </div>
-
-              {/* Correct Answer Display for Wrong Answers */}
-              {!isCorrect && (
-                <div className="bg-white p-6 rounded-xl border-2 border-red-300 shadow-inner">
-                  <p className="text-gray-600 text-sm mb-3 text-center">La respuesta correcta es:</p>
-                  <div className="bg-gradient-to-r from-red-500 to-red-600 text-white py-4 px-6 rounded-lg">
-                    <p className="text-3xl font-bold text-center tracking-wide">
-                      {currentQuestion.correctAnswer ? 'VERDADERO ✓' : 'FALSO ✗'}
-                    </p>
-                  </div>
-                </div>
-              )}
-
-              {/* Action Button */}
-              <Button 
-                onClick={handleNext}
-                className="w-full py-4 text-lg shadow-lg"
-              >
-                {isCorrect ? 'Siguiente Pregunta →' : '↻ Intentar de Nuevo'}
-              </Button>
-
-              {/* Score Display */}
-              {isCorrect && (
-                <div className="text-center bg-blue-50 rounded-lg p-4">
-                  <p className="text-gray-600 text-sm">Puntos acumulados</p>
-                  <p className="text-3xl font-bold text-blue-600">{score}</p>
-                </div>
-              )}
-            </div>
-          )}
-        </div>
+    <div className="space-y-6">
+      <div className="flex justify-between items-center">
+        <span className="text-xs font-bold uppercase text-blue-600 bg-blue-100 px-2 py-1 rounded">
+          Pregunta {currentQuestionIndex + 1} de {availableQuestions.length}
+        </span>
+        <span className="text-sm font-bold text-gray-600">Puntos: {score}</span>
       </div>
+
+      <div className="bg-gradient-to-br from-blue-50 to-cyan-50 p-6 rounded-2xl shadow-inner border-2 border-blue-100">
+        <p className="text-lg font-medium text-gray-800 text-center leading-relaxed">
+          {currentQuestion.statement}
+        </p>
+      </div>
+
+      {!showResult ? (
+        <div className="grid grid-cols-2 gap-4">
+          <button
+            onClick={() => handleAnswer(true)}
+            className="bg-gradient-to-br from-green-500 to-green-600 text-white p-6 rounded-xl font-bold text-lg shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200 active:scale-95"
+          >
+            ✓ VERDADERO
+          </button>
+          <button
+            onClick={() => handleAnswer(false)}
+            className="bg-gradient-to-br from-red-500 to-red-600 text-white p-6 rounded-xl font-bold text-lg shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200 active:scale-95"
+          >
+            ✗ FALSO
+          </button>
+        </div>
+      ) : (
+        <div className={`p-6 rounded-2xl border-2 animate-in slide-in-from-bottom-4 duration-300 ${
+          isCorrect 
+            ? 'bg-green-50 border-green-300' 
+            : 'bg-red-50 border-red-300'
+        }`}>
+          <div className="flex items-center gap-3 mb-4">
+            {isCorrect ? (
+              <CheckCircle className="text-green-600 flex-shrink-0" size={32} />
+            ) : (
+              <XCircle className="text-red-600 flex-shrink-0" size={32} />
+            )}
+            <h3 className={`text-xl font-bold ${isCorrect ? 'text-green-700' : 'text-red-700'}`}>
+              {isCorrect ? '¡Correcto!' : 'Incorrecto'}
+            </h3>
+          </div>
+          
+          <p className="text-gray-700 mb-4 leading-relaxed">
+            {currentQuestion.explanation}
+          </p>
+
+          <Button
+            onClick={handleNextQuestion}
+            fullWidth
+            className={isCorrect ? 'bg-green-600 hover:bg-green-700' : 'bg-red-600 hover:bg-red-700'}
+          >
+            {isCorrect 
+              ? (currentQuestionIndex < availableQuestions.length - 1 ? 'Siguiente Pregunta' : 'Finalizar Módulo')
+              : 'Volver a Intentar'
+            }
+          </Button>
+        </div>
+      )}
     </div>
   );
 };
