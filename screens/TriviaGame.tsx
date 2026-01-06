@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Timer, Zap } from 'lucide-react';
+import { Timer, Zap, Star } from 'lucide-react';
 import { Button } from '../components/Button';
 import { DATA_BY_LEVEL, GAME_IDS } from '../constants';
 import { supabase } from '../supabaseClient';
@@ -15,6 +15,7 @@ export const TriviaGame: React.FC<Props> = ({ level, onComplete }) => {
   const [score, setScore] = useState(0);
   const [isGameActive, setIsGameActive] = useState(false);
   const [isFinished, setIsFinished] = useState(false);
+  const [showCelebration, setShowCelebration] = useState(false);
   const timerRef = useRef<number | null>(null);
 
   const questions = DATA_BY_LEVEL.TRIVIA[level];
@@ -59,7 +60,7 @@ export const TriviaGame: React.FC<Props> = ({ level, onComplete }) => {
   const handleAnswer = (optionIndex: number) => {
     const isCorrect = optionIndex === currentQ.correctIndex;
     if (isCorrect) {
-        setScore(s => s + 50); // High reward for speed
+        setScore(s => s + 50);
     }
     
     if (index < questions.length - 1) {
@@ -70,7 +71,6 @@ export const TriviaGame: React.FC<Props> = ({ level, onComplete }) => {
   };
 
   const handleComplete = async () => {
-    // Guardar progreso en Supabase
     try {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) {
@@ -78,7 +78,6 @@ export const TriviaGame: React.FC<Props> = ({ level, onComplete }) => {
         return;
       }
 
-      // Obtener estado actual
       const { data: gameState } = await supabase
         .from('game_state')
         .select('completed_games')
@@ -88,7 +87,6 @@ export const TriviaGame: React.FC<Props> = ({ level, onComplete }) => {
       const completed = gameState?.completed_games || [];
       const gameId = GAME_IDS.TRIVIA[level];
 
-      // Solo agregar si no está completado
       if (!completed.includes(gameId)) {
         const newCompleted = [...completed, gameId];
         
@@ -98,7 +96,10 @@ export const TriviaGame: React.FC<Props> = ({ level, onComplete }) => {
           .eq('user_id', session.user.id);
       }
 
-      onComplete(score);
+      setShowCelebration(true);
+      setTimeout(() => {
+        onComplete(score);
+      }, 2000);
     } catch (error) {
       console.error('Error saving trivia progress:', error);
       onComplete(score);
@@ -107,19 +108,90 @@ export const TriviaGame: React.FC<Props> = ({ level, onComplete }) => {
 
   if (isFinished) {
     return (
-      <div className="text-center py-12 space-y-6">
-        <div className="inline-block p-4 rounded-full bg-purple-100 text-purple-600 mb-4">
-          <Timer size={48} />
-        </div>
-        <h2 className="text-3xl font-bold text-gray-800">¡Tiempo Agotado!</h2>
-        <div className="text-left max-w-xs mx-auto bg-gray-50 p-4 rounded-lg">
+      <div className="min-h-screen bg-gradient-to-br from-purple-50 via-pink-50 to-purple-50 flex items-center justify-center p-4 relative overflow-hidden">
+        {/* Animated Stars */}
+        {showCelebration && (
+          <>
+            <div className="absolute inset-0 overflow-hidden pointer-events-none">
+              {[...Array(20)].map((_, i) => (
+                <div
+                  key={i}
+                  className="absolute animate-float"
+                  style={{
+                    left: `${Math.random() * 100}%`,
+                    top: `-20px`,
+                    animationDelay: `${Math.random() * 2}s`,
+                    animationDuration: `${3 + Math.random() * 2}s`
+                  }}
+                >
+                  <Star className="text-purple-400" size={20 + Math.random() * 20} fill="currentColor" />
+                </div>
+              ))}
+            </div>
+            <style>{`
+              @keyframes float {
+                0% {
+                  transform: translateY(0) rotate(0deg);
+                  opacity: 1;
+                }
+                100% {
+                  transform: translateY(100vh) rotate(360deg);
+                  opacity: 0;
+                }
+              }
+              .animate-float {
+                animation: float linear forwards;
+              }
+            `}</style>
+          </>
+        )}
+
+        <div className="bg-white rounded-3xl shadow-2xl p-8 max-w-md w-full text-center relative z-10 transform animate-bounce-in">
+          <div className="inline-block p-4 rounded-full bg-purple-100 text-purple-600 mb-4">
+            <Timer size={48} />
+          </div>
+          <h2 className="text-3xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent mb-2">
+            ¡Nivel {level} Completado!
+          </h2>
+          
+          <div className="text-left max-w-xs mx-auto bg-gray-50 p-4 rounded-lg mb-6">
             <p className="flex justify-between mb-2"><span>Nivel:</span> <span className="font-bold">{level}</span></p>
             <p className="flex justify-between mb-2"><span>Preguntas:</span> <span className="font-bold">{index + 1}/{questions.length}</span></p>
-            <p className="flex justify-between text-lg"><span>Puntaje:</span> <span className="font-bold text-[#00965E]">{score}</span></p>
+          </div>
+
+          <div className="bg-gradient-to-br from-purple-50 to-pink-50 rounded-2xl p-6 mb-6 border-2 border-purple-200">
+            <p className="text-gray-700 text-lg mb-2 font-semibold">Puntos Ganados</p>
+            <p className="text-6xl font-black bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
+              {score}
+            </p>
+          </div>
+
+          <Button onClick={handleComplete} fullWidth className="shadow-lg">
+            Recoger Puntos
+          </Button>
         </div>
-        <Button onClick={handleComplete} fullWidth>
-          Recoger Puntos
-        </Button>
+
+        <style>{`
+          @keyframes bounce-in {
+            0% {
+              transform: scale(0.3);
+              opacity: 0;
+            }
+            50% {
+              transform: scale(1.05);
+            }
+            70% {
+              transform: scale(0.9);
+            }
+            100% {
+              transform: scale(1);
+              opacity: 1;
+            }
+          }
+          .animate-bounce-in {
+            animation: bounce-in 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+          }
+        `}</style>
       </div>
     );
   }
@@ -144,7 +216,6 @@ export const TriviaGame: React.FC<Props> = ({ level, onComplete }) => {
 
   return (
     <div className="flex flex-col h-full space-y-6">
-      {/* Timer Bar */}
       <div className="space-y-2">
         <div className="flex justify-between items-center font-bold text-gray-500 text-sm">
             <span>Nivel {level} - Pregunta {index + 1}</span>
