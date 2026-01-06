@@ -78,7 +78,6 @@ export const Register: React.FC<Props> = ({ onRegister, onSwitchToLogin }) => {
         email: formData.email,
         password: formData.password,
         options: {
-          emailRedirectTo: undefined,
           data: {
             full_name: formData.fullName
           }
@@ -123,7 +122,15 @@ export const Register: React.FC<Props> = ({ onRegister, onSwitchToLogin }) => {
         // No lanzar error aquí, continuar con el registro
       }
 
-      // 4. Llamar onRegister con los datos del usuario
+      // 4. Iniciar sesión automáticamente
+      const { error: signInError } = await supabase.auth.signInWithPassword({
+        email: formData.email,
+        password: formData.password
+      });
+
+      if (signInError) throw signInError;
+
+      // 5. Llamar onRegister con los datos del usuario
       onRegister({
         id: userId,
         name: formData.fullName,
