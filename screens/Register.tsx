@@ -1,9 +1,8 @@
 import React, { useState } from 'react';
-import { User as UserIcon, Mail, Lock, Phone, Building, Users } from 'lucide-react';
 import { Button } from '../components/Button';
+import { supabase } from '../supabaseClient';
 import { User } from '../types';
 import { LOGO_URL } from '../constants';
-import { supabase } from '../supabaseClient';
 
 interface Props {
   onRegister: (user: User) => void;
@@ -12,265 +11,311 @@ interface Props {
 
 export const Register: React.FC<Props> = ({ onRegister, onSwitchToLogin }) => {
   const [formData, setFormData] = useState({
-    nombre: '',
-    apellido: '',
+    fullName: '',
     email: '',
-    celular: '',
-    farmacia: '',
-    nombre_visitador: '',
-    password: ''
+    phone: '',
+    pharmacyName: '',
+    representativeName: '',
+    password: '',
+    confirmPassword: ''
   });
-  const [error, setError] = useState('');
+  const [errors, setErrors] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(false);
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
-  };
+  const validateForm = () => {
+    const newErrors: Record<string, string> = {};
 
-  const validateCelular = (celular: string): boolean => {
-    const celularRegex = /^0[0-9]{9}$/;
-    return celularRegex.test(celular);
+    if (!formData.fullName.trim()) {
+      newErrors.fullName = 'El nombre completo es requerido';
+    }
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!formData.email.trim()) {
+      newErrors.email = 'El email es requerido';
+    } else if (!emailRegex.test(formData.email)) {
+      newErrors.email = 'El email no es válido';
+    }
+
+    const phoneRegex = /^0\d{9}$/;
+    if (!formData.phone.trim()) {
+      newErrors.phone = 'El teléfono es requerido';
+    } else if (!phoneRegex.test(formData.phone)) {
+      newErrors.phone = 'El teléfono debe tener 10 dígitos y empezar con 0';
+    }
+
+    if (!formData.pharmacyName.trim()) {
+      newErrors.pharmacyName = 'El nombre de la farmacia es requerido';
+    }
+
+    if (!formData.representativeName.trim()) {
+      newErrors.representativeName = 'El nombre del visitador es requerido';
+    }
+
+    if (!formData.password) {
+      newErrors.password = 'La contraseña es requerida';
+    } else if (formData.password.length < 6) {
+      newErrors.password = 'La contraseña debe tener al menos 6 caracteres';
+    }
+
+    if (formData.password !== formData.confirmPassword) {
+      newErrors.confirmPassword = 'Las contraseñas no coinciden';
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    if (!formData.nombre || !formData.apellido || !formData.email || !formData.celular || 
-        !formData.farmacia || !formData.nombre_visitador || !formData.password) {
-      setError('Por favor completa todos los campos');
-      return;
-    }
 
-    if (!validateCelular(formData.celular)) {
-      setError('El celular debe tener 10 dígitos y empezar con 0 (ej: 0985689501)');
-      return;
-    }
+    if (!validateForm()) return;
 
     setLoading(true);
-    setError('');
 
     try {
-      // Registrar usuario en Supabase Auth
+      // 1. Crear usuario en Supabase Auth
       const { data: authData, error: authError } = await supabase.auth.signUp({
         email: formData.email,
         password: formData.password,
+        options: {
+          emailRedirectTo: undefined,
+          data: {
+            full_name: formData.fullName
+          }
+        }
       });
 
       if (authError) throw authError;
       if (!authData.user) throw new Error('No se pudo crear el usuario');
 
-      // Crear perfil del usuario con todos los datos
+      const userId = authData.user.id;
+
+      // 2. Crear perfil en la tabla profiles
       const { error: profileError } = await supabase
         .from('profiles')
-        .insert([
-          {
-            user_id: authData.user.id,
-            full_name: `${formData.nombre} ${formData.apellido}`,
-            email: formData.email,
-            apellido: formData.apellido,
-            celular: formData.celular,
-            farmacia: formData.farmacia,
-            nombre_visitador: formData.nombre_visitador,
-          }
-        ]);
+        .insert([{
+          user_id: userId,
+          full_name: formData.fullName,
+          email: formData.email,
+          phone: formData.phone,
+          pharmacy_name: formData.pharmacyName,
+          representative_name: formData.representativeName,
+          privacy_accepted: false,
+          created_at: new Date().toISOString()
+        }]);
 
       if (profileError) throw profileError;
 
-      // Crear estado inicial del juego
+      // 3. Crear game_state inicial
       const { error: gameStateError } = await supabase
         .from('game_state')
-        .insert([
-          {
-            user_id: authData.user.id,
-            points: 0,
-            level: 1,
-            badges: [],
-            completed_games: []
-          }
-        ]);
+        .insert([{
+          user_id: userId,
+          points: 0,
+          level: 1,
+          badges: [],
+          completed_games: [],
+          updated_at: new Date().toISOString()
+        }]);
 
-      if (gameStateError) throw gameStateError;
+      if (gameStateError) {
+        console.error('Error creating game_state:', gameStateError);
+        // No lanzar error aquí, continuar con el registro
+      }
 
-      // Crear objeto de usuario para la app
-      const newUser: User = {
-        id: authData.user.id,
-        name: `${formData.nombre} ${formData.apellido}`,
+      // 4. Llamar onRegister con los datos del usuario
+      onRegister({
+        id: userId,
+        name: formData.fullName,
         email: formData.email
-      };
+      });
 
-      onRegister(newUser);
-    } catch (err: any) {
-      console.error('Error en registro:', err);
-      setError(err.message || 'Error al registrar usuario');
+    } catch (error: any) {
+      console.error('Error en registro:', error);
+      
+      if (error.message?.includes('already registered')) {
+        setErrors({ email: 'Este email ya está registrado' });
+      } else if (error.message?.includes('email')) {
+        setErrors({ email: 'Error al crear la cuenta. Verifica el email.' });
+      } else {
+        setErrors({ general: 'Error al registrar usuario. Intenta nuevamente.' });
+      }
     } finally {
       setLoading(false);
     }
   };
 
+  const handleChange = (field: string, value: string) => {
+    setFormData(prev => ({ ...prev, [field]: value }));
+    if (errors[field]) {
+      setErrors(prev => ({ ...prev, [field]: '' }));
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-green-50 to-green-100 flex items-center justify-center p-4">
-      <div className="bg-white rounded-2xl shadow-xl p-8 w-full max-w-md">
-        <div className="text-center mb-8">
+      <div className="bg-white rounded-2xl shadow-2xl p-8 w-full max-w-md">
+        <div className="text-center mb-6">
           <img src={LOGO_URL} alt="BIOFIT Logo" className="h-16 mx-auto mb-4" />
-          <h1 className="text-3xl font-bold biofit-green mb-2">BIOTrivia</h1>
-          <p className="text-gray-600">Registro de Dependientes de Farmacia</p>
+          <h2 className="text-3xl font-bold biofit-green mb-2">Crear Cuenta</h2>
+          <p className="text-gray-600">Regístrate para comenzar tu entrenamiento</p>
         </div>
+
+        {errors.general && (
+          <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-4">
+            {errors.general}
+          </div>
+        )}
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Nombre
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Nombre Completo *
             </label>
-            <div className="relative">
-              <UserIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
-              <input
-                type="text"
-                name="nombre"
-                value={formData.nombre}
-                onChange={handleChange}
-                className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                placeholder="Ej. Juan"
-                disabled={loading}
-              />
-            </div>
+            <input
+              type="text"
+              value={formData.fullName}
+              onChange={(e) => handleChange('fullName', e.target.value)}
+              className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent ${
+                errors.fullName ? 'border-red-500' : 'border-gray-300'
+              }`}
+              placeholder="Juan Pérez"
+            />
+            {errors.fullName && (
+              <p className="text-red-500 text-xs mt-1">{errors.fullName}</p>
+            )}
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Apellido
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Email *
             </label>
-            <div className="relative">
-              <UserIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
-              <input
-                type="text"
-                name="apellido"
-                value={formData.apellido}
-                onChange={handleChange}
-                className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                placeholder="Ej. Pérez"
-                disabled={loading}
-              />
-            </div>
+            <input
+              type="email"
+              value={formData.email}
+              onChange={(e) => handleChange('email', e.target.value)}
+              className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent ${
+                errors.email ? 'border-red-500' : 'border-gray-300'
+              }`}
+              placeholder="ejemplo@farmacia.com"
+            />
+            {errors.email && (
+              <p className="text-red-500 text-xs mt-1">{errors.email}</p>
+            )}
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Correo Electrónico
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Teléfono *
             </label>
-            <div className="relative">
-              <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
-              <input
-                type="email"
-                name="email"
-                value={formData.email}
-                onChange={handleChange}
-                className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                placeholder="correo@ejemplo.com"
-                disabled={loading}
-              />
-            </div>
+            <input
+              type="tel"
+              value={formData.phone}
+              onChange={(e) => handleChange('phone', e.target.value)}
+              className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent ${
+                errors.phone ? 'border-red-500' : 'border-gray-300'
+              }`}
+              placeholder="0987654321"
+              maxLength={10}
+            />
+            {errors.phone && (
+              <p className="text-red-500 text-xs mt-1">{errors.phone}</p>
+            )}
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Celular
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Nombre de la Farmacia *
             </label>
-            <div className="relative">
-              <Phone className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
-              <input
-                type="tel"
-                name="celular"
-                value={formData.celular}
-                onChange={handleChange}
-                className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                placeholder="0985689501"
-                maxLength={10}
-                disabled={loading}
-              />
-            </div>
+            <input
+              type="text"
+              value={formData.pharmacyName}
+              onChange={(e) => handleChange('pharmacyName', e.target.value)}
+              className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent ${
+                errors.pharmacyName ? 'border-red-500' : 'border-gray-300'
+              }`}
+              placeholder="Farmacia Cruz Azul"
+            />
+            {errors.pharmacyName && (
+              <p className="text-red-500 text-xs mt-1">{errors.pharmacyName}</p>
+            )}
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Farmacia
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Nombre del Visitador/Representante *
             </label>
-            <div className="relative">
-              <Building className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
-              <input
-                type="text"
-                name="farmacia"
-                value={formData.farmacia}
-                onChange={handleChange}
-                className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                placeholder="Ej. Farmacia Cruz Azul"
-                disabled={loading}
-              />
-            </div>
+            <input
+              type="text"
+              value={formData.representativeName}
+              onChange={(e) => handleChange('representativeName', e.target.value)}
+              className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent ${
+                errors.representativeName ? 'border-red-500' : 'border-gray-300'
+              }`}
+              placeholder="María García"
+            />
+            {errors.representativeName && (
+              <p className="text-red-500 text-xs mt-1">{errors.representativeName}</p>
+            )}
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Nombre del Visitador
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Contraseña *
             </label>
-            <div className="relative">
-              <Users className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
-              <input
-                type="text"
-                name="nombre_visitador"
-                value={formData.nombre_visitador}
-                onChange={handleChange}
-                className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                placeholder="Ej. María González"
-                disabled={loading}
-              />
-            </div>
+            <input
+              type="password"
+              value={formData.password}
+              onChange={(e) => handleChange('password', e.target.value)}
+              className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent ${
+                errors.password ? 'border-red-500' : 'border-gray-300'
+              }`}
+              placeholder="Mínimo 6 caracteres"
+            />
+            {errors.password && (
+              <p className="text-red-500 text-xs mt-1">{errors.password}</p>
+            )}
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Contraseña
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Confirmar Contraseña *
             </label>
-            <div className="relative">
-              <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
-              <input
-                type="password"
-                name="password"
-                value={formData.password}
-                onChange={handleChange}
-                className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                placeholder="Mínimo 6 caracteres"
-                disabled={loading}
-              />
-            </div>
+            <input
+              type="password"
+              value={formData.confirmPassword}
+              onChange={(e) => handleChange('confirmPassword', e.target.value)}
+              className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent ${
+                errors.confirmPassword ? 'border-red-500' : 'border-gray-300'
+              }`}
+              placeholder="Repite tu contraseña"
+            />
+            {errors.confirmPassword && (
+              <p className="text-red-500 text-xs mt-1">{errors.confirmPassword}</p>
+            )}
           </div>
 
-          {error && (
-            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
-              {error}
-            </div>
-          )}
-
-          <Button 
-            onClick={handleSubmit} 
-            className="w-full py-3 text-lg"
+          <Button
+            type="submit"
+            fullWidth
             disabled={loading}
+            className="mt-6"
           >
-            {loading ? 'Registrando...' : 'Comenzar Entrenamiento'}
+            {loading ? 'Registrando...' : 'Crear Cuenta'}
           </Button>
-
-          <div className="text-center mt-4">
-            <p className="text-gray-600">
-              ¿Ya tienes cuenta?{' '}
-              <button
-                type="button"
-                onClick={onSwitchToLogin}
-                className="biofit-green font-semibold hover:underline"
-              >
-                Inicia sesión aquí
-              </button>
-            </p>
-          </div>
         </form>
+
+        <div className="mt-6 text-center">
+          <p className="text-gray-600 text-sm">
+            ¿Ya tienes cuenta?{' '}
+            <button
+              onClick={onSwitchToLogin}
+              className="text-[#00965E] font-semibold hover:underline"
+            >
+              Inicia Sesión
+            </button>
+          </p>
+        </div>
       </div>
     </div>
   );
