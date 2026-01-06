@@ -1,5 +1,5 @@
 import React from 'react';
-import { Trophy, LogOut } from 'lucide-react';
+import { Trophy, LogOut, Home } from 'lucide-react';
 import { GameState } from '../types';
 import { LEVEL_THRESHOLDS, LOGO_URL } from '../constants';
 
@@ -31,7 +31,6 @@ export const Layout: React.FC<LayoutProps> = ({ children, gameState, onGoHome, o
       <header className="bg-[#00965E] text-white p-4 sticky top-0 z-50 shadow-md">
         <div className="flex justify-between items-center mb-2">
           <div className="flex items-center cursor-pointer" onClick={onGoHome}>
-             {/* Logo Image */}
              <img 
                 src={LOGO_URL} 
                 alt="BIOFIT" 
@@ -41,15 +40,21 @@ export const Layout: React.FC<LayoutProps> = ({ children, gameState, onGoHome, o
                     e.currentTarget.nextElementSibling?.classList.remove('hidden');
                 }}
              />
-             {/* Fallback Text if image fails */}
              <div className="hidden font-black text-2xl tracking-tighter italic">BIOFIT<sup className="text-xs font-normal">®</sup></div>
           </div>
           
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2">
             <div className="flex items-center space-x-1 bg-white/20 px-3 py-1 rounded-full">
                 <Trophy size={16} className="text-yellow-300" />
                 <span className="font-bold">{gameState.points}</span>
             </div>
+            <button 
+                onClick={onGoHome} 
+                className="p-1.5 rounded-full hover:bg-white/20 text-white/80 hover:text-white transition-colors"
+                title="Volver al Menú"
+            >
+                <Home size={20} />
+            </button>
             <button 
                 onClick={onLogout} 
                 className="p-1.5 rounded-full hover:bg-white/20 text-white/80 hover:text-white transition-colors"
@@ -68,7 +73,7 @@ export const Layout: React.FC<LayoutProps> = ({ children, gameState, onGoHome, o
                 </span>
                 <div className="text-right">
                     <span className="text-xs font-semibold inline-block text-white">
-                        {gameState.points} / {gameState.points < 300 ? 300 : 800}
+                        {gameState.points} / {gameState.points < 400 ? 400 : 800}
                     </span>
                 </div>
             </div>
