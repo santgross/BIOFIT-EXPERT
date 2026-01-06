@@ -100,7 +100,6 @@ export const Register: React.FC<Props> = ({ onRegister, onSwitchToLogin }) => {
         email: formData.email,
         phone: formData.phone,
         pharmacy_name: formData.pharmacyName,
-        representative_name: formData.representativeName,
         representative_name: formData.representativeName
       };
 
