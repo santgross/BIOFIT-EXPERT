@@ -83,7 +83,7 @@ export default function App() {
         points: gameData.points || 0,
         level: gameData.level || 1,
         badges: gameData.badges || [],
-        completedGames: []
+        completedGames: gameData.completed_modules || []
       });
 
       // Verificar si es administrador
@@ -137,6 +137,7 @@ export default function App() {
           points: state.points,
           level: state.level,
           badges: state.badges,
+          completed_modules: state.completedGames,
           updated_at: new Date().toISOString()
         })
         .eq('user_id', user.id);
@@ -193,9 +194,19 @@ export default function App() {
     }
   };
 
-  const handleGameComplete = async (pointsEarned: number) => {
+  const handleGameComplete = async (pointsEarned: number, moduleId: string) => {
     const newPoints = gameState.points + pointsEarned;
-    const updatedState = { ...gameState, points: newPoints };
+    
+    // Agregar el módulo completado si no está ya
+    const updatedCompletedGames = gameState.completedGames.includes(moduleId)
+      ? gameState.completedGames
+      : [...gameState.completedGames, moduleId];
+    
+    const updatedState = { 
+      ...gameState, 
+      points: newPoints,
+      completedGames: updatedCompletedGames
+    };
     
     setGameState(updatedState);
     await updateGameStateInDB(updatedState);
