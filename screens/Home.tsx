@@ -188,7 +188,7 @@ export const Home: React.FC<Props> = ({ onNavigate, unlockedBadges, completedGam
                 Has completado todos los módulos de entrenamiento
               </p>
               <button
-                onClick={() => onNavigate(Screen.BADGES)}
+                onClick={() => onNavigate(Screen.CERTIFICATE)}
                 className="bg-white text-yellow-600 font-black text-xl py-4 px-8 rounded-xl shadow-xl hover:scale-110 transform transition-all duration-200 hover:shadow-2xl"
               >
                 🎓 Ver Mi Certificado
