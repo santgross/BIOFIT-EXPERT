@@ -13,9 +13,9 @@ export const BRAND_COLORS = {
 
 export const LEVEL_THRESHOLDS = {
   PRINCIPIANTE: 0,
-  AVANZADO: 400,
-  EXPERTO: 800,
-  MAESTRO: 1200,
+  AVANZADO: 667,
+  EXPERTO: 1334,
+  MAESTRO: 2000,
 };
 
 export const BADGES: Badge[] = [
