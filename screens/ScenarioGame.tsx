@@ -1,8 +1,7 @@
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { User, MessageCircle, AlertTriangle, CheckCircle2, Star } from 'lucide-react';
-import { DATA_BY_LEVEL, GAME_IDS } from '../constants';
+import { DATA_BY_LEVEL } from '../constants';
 import { Button } from '../components/Button';
-import { supabase } from '../supabaseClient';
 
 interface Props {
   level: 1 | 2 | 3;
@@ -10,62 +9,31 @@ interface Props {
 }
 
 export const ScenarioGame: React.FC<Props> = ({ level, onComplete }) => {
+  const [scenarios, setScenarios] = useState<any[]>([]);
   const [currentScenarioIndex, setCurrentScenarioIndex] = useState(0);
   const [showResult, setShowResult] = useState(false);
   const [userIsCorrect, setUserIsCorrect] = useState(false);
   const [score, setScore] = useState(0);
   const [isFinished, setIsFinished] = useState(false);
   const [showCelebration, setShowCelebration] = useState(false);
-  const [currentScenarioLevel, setCurrentScenarioLevel] = useState(1);
 
-  // Cargar progreso del usuario al iniciar
   useEffect(() => {
-    loadScenarioProgress();
+    loadAllScenarios();
   }, []);
 
-  const loadScenarioProgress = async () => {
-    try {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) {
-        setCurrentScenarioLevel(1);
-        return;
-      }
-
-      const { data: gameState } = await supabase
-        .from('game_state')
-        .select('completed_games')
-        .eq('user_id', session.user.id)
-        .single();
-
-      const completed = gameState?.completed_games || [];
-      
-      // Determinar nivel basado en lo completado
-      if (completed.includes('scenario-level-1') && completed.includes('scenario-level-2')) {
-        setCurrentScenarioLevel(3);
-      } else if (completed.includes('scenario-level-1')) {
-        setCurrentScenarioLevel(2);
-      } else {
-        setCurrentScenarioLevel(1);
-      }
-    } catch (error) {
-      console.error('Error loading scenario progress:', error);
-      setCurrentScenarioLevel(1);
-    }
+  const loadAllScenarios = () => {
+    // Cargar TODOS los escenarios de todos los niveles
+    const allScenarios = [
+      ...DATA_BY_LEVEL.SCENARIO[2],
+      ...DATA_BY_LEVEL.SCENARIO[3]
+    ];
+    setScenarios(allScenarios);
   };
-
-  const scenarios = useMemo(() => {
-    const all = DATA_BY_LEVEL.SCENARIO[currentScenarioLevel];
-    if (all.length === 0) return [];
-    return [...all].sort(() => Math.random() - 0.5).slice(0, 4);
-  }, [currentScenarioLevel]);
 
   if (scenarios.length === 0) {
     return (
-      <div className="text-center py-10 space-y-6 bg-white rounded-2xl p-8 shadow-sm">
-        <AlertTriangle size={48} className="mx-auto text-orange-400" />
-        <h2 className="text-xl font-bold text-gray-800">Contenido en preparación</h2>
-        <p className="text-gray-600">Este nivel aún no tiene simulaciones disponibles. ¡Sigue ganando puntos en otros juegos!</p>
-        <Button onClick={() => onComplete(0)} fullWidth>Volver</Button>
+      <div className="text-center py-10">
+        <p className="text-gray-600">Cargando escenarios...</p>
       </div>
     );
   }
@@ -90,54 +58,13 @@ export const ScenarioGame: React.FC<Props> = ({ level, onComplete }) => {
       setShowResult(false);
     } else {
       setIsFinished(true);
-    }
-  };
-
-  const handleComplete = async () => {
-    try {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) {
-        onComplete(score);
-        return;
-      }
-
-      const { data: gameState } = await supabase
-        .from('game_state')
-        .select('completed_games, points')
-        .eq('user_id', session.user.id)
-        .single();
-
-      const completed = gameState?.completed_games || [];
-      const gameId = GAME_IDS.SCENARIO[currentScenarioLevel];
-      const alreadyCompleted = completed.includes(gameId);
-
-      if (!alreadyCompleted) {
-        const newCompleted = [...completed, gameId];
-        const currentPoints = gameState?.points || 0;
-        
-        await supabase
-          .from('game_state')
-          .update({ 
-            completed_games: newCompleted,
-            points: currentPoints + score
-          })
-          .eq('user_id', session.user.id);
-      }
-
       setShowCelebration(true);
-      setTimeout(() => {
-        onComplete(score);
-      }, 2000);
-    } catch (error) {
-      console.error('Error saving scenario progress:', error);
-      onComplete(score);
     }
   };
 
   if (isFinished) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-red-50 via-orange-50 to-red-50 flex items-center justify-center p-4 relative overflow-hidden">
-        {/* Animated Stars */}
         {showCelebration && (
           <>
             <div className="absolute inset-0 overflow-hidden pointer-events-none">
@@ -179,7 +106,7 @@ export const ScenarioGame: React.FC<Props> = ({ level, onComplete }) => {
             <CheckCircle2 size={48} />
           </div>
           <h2 className="text-3xl font-bold bg-gradient-to-r from-red-600 to-orange-600 bg-clip-text text-transparent mb-2">
-            ¡Nivel {currentScenarioLevel} Completado!
+            ¡Módulo Completado!
           </h2>
           <p className="text-gray-600 mb-4">Has demostrado gran criterio en el mostrador.</p>
           
@@ -190,7 +117,7 @@ export const ScenarioGame: React.FC<Props> = ({ level, onComplete }) => {
             </p>
           </div>
 
-          <Button onClick={handleComplete} fullWidth className="shadow-lg">
+          <Button onClick={() => onComplete(score)} fullWidth className="shadow-lg">
             Continuar al Menú
           </Button>
         </div>
@@ -223,11 +150,11 @@ export const ScenarioGame: React.FC<Props> = ({ level, onComplete }) => {
   return (
     <div className="space-y-6 flex flex-col h-full">
        <div className="flex justify-between items-center">
-          <div className="bg-red-100 text-red-600 font-bold px-3 py-1 rounded text-[10px] uppercase tracking-wider">
-             Simulación Mostrador Lvl {currentScenarioLevel}
+          <div className="bg-red-100 text-red-600 font-bold px-3 py-1 rounded text-xs uppercase tracking-wider">
+             Casos de Mostrador
           </div>
-          <div className="text-xs font-bold text-gray-400">
-             CASO {currentScenarioIndex + 1} / {scenarios.length}
+          <div className="text-sm font-bold text-gray-600">
+             CASO {currentScenarioIndex + 1} / {scenarios.length} | Puntos: {score}
           </div>
        </div>
 
@@ -281,13 +208,13 @@ export const ScenarioGame: React.FC<Props> = ({ level, onComplete }) => {
             
             {!scenario.isCorrect && (
                 <div className="bg-white p-3 rounded-xl border border-red-100 mb-4 shadow-sm">
-                    <span className="font-bold text-[10px] text-red-400 uppercase tracking-widest block mb-1">Criterio experto:</span>
+                    <span className="font-bold text-xs text-red-400 uppercase tracking-widest block mb-1">Criterio experto:</span>
                     <p className="text-gray-800 text-xs italic">{scenario.correctAction}</p>
                 </div>
             )}
 
             <Button onClick={nextScenario} fullWidth className="shadow-md">
-                Siguiente Caso
+                {currentScenarioIndex < scenarios.length - 1 ? 'Siguiente Caso' : 'Finalizar Módulo'}
             </Button>
          </div>
        )}
