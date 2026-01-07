@@ -74,7 +74,7 @@ export const Layout: React.FC<Props> = ({ children, gameState, onGoHome, onLogou
               <div className={`${levelColor} text-white text-xs font-bold px-3 py-1 rounded-full shadow-md`}>
                 {currentLevel}
               </div>
-              <span className="text-sm text-white/90 font-semibold">{gameState.points} / 2410</span>
+              <span className="text-sm text-white/90 font-semibold">{gameState.points} / 2300</span>
             </div>
             
             {/* Progress Bar */}
