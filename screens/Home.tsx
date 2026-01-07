@@ -106,8 +106,8 @@ export const Home: React.FC<Props> = ({ onNavigate, unlockedBadges, completedGam
               return (
                 <button
                   key={game.id}
-                  onClick={() => game.available && onNavigate(game.id)}
-                  disabled={!game.available}
+                  onClick={() => game.available && !completed && onNavigate(game.id)}
+                  disabled={!game.available || completed}
                   className={`
                     bg-white rounded-xl shadow-md p-6 text-left transition-all duration-200 relative
                     ${game.available 
