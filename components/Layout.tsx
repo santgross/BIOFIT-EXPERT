@@ -27,7 +27,7 @@ export const Layout: React.FC<Props> = ({ children, gameState, onGoHome, onLogou
 
   const currentLevel = getLevelName(gameState.points);
   const levelColor = getLevelColor(gameState.points);
-  const progressPercentage = Math.min((gameState.points / 2410) * 100, 100);
+  const progressPercentage = Math.min((gameState.points / 2300) * 100, 100);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-green-50 to-green-100">
