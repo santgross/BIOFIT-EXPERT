@@ -194,13 +194,30 @@ export default function App() {
     }
   };
 
-  const handleGameComplete = async (pointsEarned: number, moduleId: string) => {
+  const handleGameComplete = async (pointsEarned: number) => {
     const newPoints = gameState.points + pointsEarned;
     
+    // Determinar qué módulo se completó basado en la pantalla actual
+    let moduleId = '';
+    switch (currentScreen) {
+      case Screen.TRUE_FALSE:
+        moduleId = 'true-false-complete';
+        break;
+      case Screen.MATCH:
+        moduleId = 'match-complete';
+        break;
+      case Screen.SCENARIO:
+        moduleId = 'scenario-complete';
+        break;
+      case Screen.TRIVIA:
+        moduleId = 'trivia-complete';
+        break;
+    }
+    
     // Agregar el módulo completado si no está ya
-    const updatedCompletedGames = gameState.completedGames.includes(moduleId)
-      ? gameState.completedGames
-      : [...gameState.completedGames, moduleId];
+    const updatedCompletedGames = moduleId && !gameState.completedGames.includes(moduleId)
+      ? [...gameState.completedGames, moduleId]
+      : gameState.completedGames;
     
     const updatedState = { 
       ...gameState, 
