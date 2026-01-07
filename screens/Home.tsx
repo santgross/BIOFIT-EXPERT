@@ -12,45 +12,9 @@ interface Props {
 }
 
 export const Home: React.FC<Props> = ({ onNavigate, unlockedBadges, completedGames, user, isAdmin = false }) => {
-  // IDs de preguntas/actividades por módulo
-  const MODULE_QUESTIONS = {
-    [Screen.TRUE_FALSE]: ['tf1', 'tf2', 'tf3', 'tf4', 'tf5', 'tf6'],
-    [Screen.MATCH]: ['match-level-1', 'match-level-2', 'match-level-3'],
-    [Screen.SCENARIO]: ['scenario-level-1', 'scenario-level-2', 'scenario-level-3'],
-    [Screen.TRIVIA]: ['trivia-level-1', 'trivia-level-2', 'trivia-level-3']
-  };
-
   // Función para verificar si un módulo está completado
-  const isModuleCompleted = (gameId: Screen) => {
-    const questionIds = MODULE_QUESTIONS[gameId as keyof typeof MODULE_QUESTIONS];
-    if (!questionIds || questionIds.length === 0) return false;
-    
-    // Para TRUE_FALSE, verificar si existe el ID del módulo completo
-    if (gameId === Screen.TRUE_FALSE) {
-      return completedGames.includes('true-false-complete');
-    }
-    
-    // Para otros módulos, verificar si TODAS las preguntas están completadas
-    return questionIds.every(qId => completedGames.includes(qId));
-  };
-
-  // Función para contar preguntas completadas
-  const getCompletedCount = (gameId: Screen) => {
-    // Para TRUE_FALSE, verificar si está completado el módulo
-    if (gameId === Screen.TRUE_FALSE) {
-      if (completedGames.includes('true-false-complete')) {
-        return 6; // Todas completadas
-      }
-      // Contar preguntas individuales
-      const tfQuestions = ['tf1', 'tf2', 'tf3', 'tf4', 'tf5', 'tf6'];
-      return tfQuestions.filter(qId => completedGames.includes(qId)).length;
-    }
-    
-    const questionIds = MODULE_QUESTIONS[gameId as keyof typeof MODULE_QUESTIONS];
-    if (!questionIds || questionIds.length === 0) return 0;
-    
-    // Contar cuántas preguntas del módulo están completadas
-    return questionIds.filter(qId => completedGames.includes(qId)).length;
+  const isModuleCompleted = (moduleId: string) => {
+    return completedGames.includes(moduleId);
   };
 
   // Función para verificar si un módulo está disponible
@@ -60,17 +24,17 @@ export const Home: React.FC<Props> = ({ onNavigate, unlockedBadges, completedGam
     
     // MATCH requiere TRUE_FALSE completado
     if (gameId === Screen.MATCH) {
-      return isModuleCompleted(Screen.TRUE_FALSE);
+      return isModuleCompleted('true-false-complete');
     }
     
     // SCENARIO requiere MATCH completado
     if (gameId === Screen.SCENARIO) {
-      return isModuleCompleted(Screen.MATCH);
+      return isModuleCompleted('match-complete');
     }
     
     // TRIVIA requiere SCENARIO completado
     if (gameId === Screen.TRIVIA) {
-      return isModuleCompleted(Screen.SCENARIO);
+      return isModuleCompleted('scenario-complete');
     }
     
     return false;
@@ -79,41 +43,44 @@ export const Home: React.FC<Props> = ({ onNavigate, unlockedBadges, completedGam
   const games = [
     {
       id: Screen.TRUE_FALSE,
+      moduleId: 'true-false-complete',
       title: 'Verdadero o Falso',
       description: 'Mitos y Realidades BIOFIT',
       icon: '✓',
       color: 'from-blue-500 to-blue-600',
-      available: isModuleAvailable(Screen.TRUE_FALSE),
-      totalQuestions: 6
+      available: isModuleAvailable(Screen.TRUE_FALSE)
     },
     {
       id: Screen.MATCH,
+      moduleId: 'match-complete',
       title: 'Match de Conceptos',
       description: 'Precio, Beneficios y Acción',
       icon: '⚡',
       color: 'from-orange-500 to-orange-600',
-      available: isModuleAvailable(Screen.MATCH),
-      totalQuestions: 3
+      available: isModuleAvailable(Screen.MATCH)
     },
     {
       id: Screen.SCENARIO,
+      moduleId: 'scenario-complete',
       title: 'Casos de Mostrador',
       description: 'Simulación de Venta',
-      icon: '⚠',
+      icon: '💊',
       color: 'from-red-500 to-red-600',
-      available: isModuleAvailable(Screen.SCENARIO),
-      totalQuestions: 3
+      available: isModuleAvailable(Screen.SCENARIO)
     },
     {
       id: Screen.TRIVIA,
+      moduleId: 'trivia-complete',
       title: 'Trivia BIOFIT',
       description: 'Conocimiento General',
       icon: '🎯',
       color: 'from-purple-500 to-purple-600',
-      available: isModuleAvailable(Screen.TRIVIA),
-      totalQuestions: 3
+      available: isModuleAvailable(Screen.TRIVIA)
     }
   ];
+
+  // Verificar si todos los módulos están completados
+  const allModulesCompleted = games.every(game => isModuleCompleted(game.moduleId));
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-green-50 to-green-100">
@@ -134,8 +101,7 @@ export const Home: React.FC<Props> = ({ onNavigate, unlockedBadges, completedGam
           <h2 className="text-2xl font-bold biofit-green mb-4">Módulos de Entrenamiento</h2>
           <div className="grid gap-4">
             {games.map((game) => {
-              const completed = isModuleCompleted(game.id);
-              const completedCount = getCompletedCount(game.id);
+              const completed = isModuleCompleted(game.moduleId);
 
               return (
                 <button
@@ -179,28 +145,16 @@ export const Home: React.FC<Props> = ({ onNavigate, unlockedBadges, completedGam
                         {game.title}
                       </h3>
                       <p className="text-gray-600 text-sm">{game.description}</p>
-                      
-                      {/* Progress indicator */}
-                      {game.available && game.totalQuestions > 0 && (
-                        <div className="mt-2">
-                          <div className="flex items-center justify-between text-xs text-gray-500 mb-1">
-                            <span>Progreso</span>
-                            <span className={`font-semibold ${completed ? 'text-green-600' : ''}`}>
-                              {completed ? `✓ Completado` : `${completedCount}/${game.totalQuestions}`}
-                            </span>
-                          </div>
-                          <div className="w-full bg-gray-200 rounded-full h-2">
-                            <div 
-                              className={`h-2 rounded-full bg-gradient-to-r ${completed ? 'from-green-500 to-green-600' : game.color} transition-all duration-500`}
-                              style={{ width: `${completed ? 100 : (completedCount / game.totalQuestions) * 100}%` }}
-                            />
-                          </div>
-                        </div>
-                      )}
 
                       {!game.available && (
                         <p className="text-sm text-orange-600 mt-2">
                           🔒 Completa el módulo anterior para desbloquear
+                        </p>
+                      )}
+                      
+                      {completed && (
+                        <p className="text-sm text-green-600 mt-2 font-semibold">
+                          ✓ ¡Módulo completado!
                         </p>
                       )}
                     </div>
@@ -223,36 +177,25 @@ export const Home: React.FC<Props> = ({ onNavigate, unlockedBadges, completedGam
         </div>
 
         {/* Botón de Certificado (si completó todo) */}
-        {(() => {
-          const allCompleted = [
-            'true-false-complete',
-            'match-level-1', 'match-level-2', 'match-level-3',
-            'scenario-level-1', 'scenario-level-2', 'scenario-level-3',
-            'trivia-level-1', 'trivia-level-2', 'trivia-level-3'
-          ].every(id => completedGames.includes(id));
-
-          if (!allCompleted) return null;
-
-          return (
-            <div className="mt-8 mb-4">
-              <div className="bg-gradient-to-r from-yellow-400 via-yellow-500 to-yellow-600 rounded-2xl shadow-2xl p-8 text-center border-4 border-yellow-300 animate-pulse">
-                <div className="text-6xl mb-4">🏆</div>
-                <h2 className="text-3xl font-black text-white mb-3 drop-shadow-lg">
-                  ¡FELICITACIONES!
-                </h2>
-                <p className="text-white text-lg mb-6 drop-shadow">
-                  Has completado todos los módulos de entrenamiento
-                </p>
-                <button
-                  onClick={() => onNavigate(Screen.CERTIFICATE)}
-                  className="bg-white text-yellow-600 font-black text-xl py-4 px-8 rounded-xl shadow-xl hover:scale-110 transform transition-all duration-200 hover:shadow-2xl"
-                >
-                  🎓 Ver Mi Certificado
-                </button>
-              </div>
+        {allModulesCompleted && (
+          <div className="mt-8 mb-4">
+            <div className="bg-gradient-to-r from-yellow-400 via-yellow-500 to-yellow-600 rounded-2xl shadow-2xl p-8 text-center border-4 border-yellow-300 animate-pulse">
+              <div className="text-6xl mb-4">🏆</div>
+              <h2 className="text-3xl font-black text-white mb-3 drop-shadow-lg">
+                ¡FELICITACIONES!
+              </h2>
+              <p className="text-white text-lg mb-6 drop-shadow">
+                Has completado todos los módulos de entrenamiento
+              </p>
+              <button
+                onClick={() => onNavigate(Screen.BADGES)}
+                className="bg-white text-yellow-600 font-black text-xl py-4 px-8 rounded-xl shadow-xl hover:scale-110 transform transition-all duration-200 hover:shadow-2xl"
+              >
+                🎓 Ver Mi Certificado
+              </button>
             </div>
-          );
-        })()}
+          </div>
+        )}
 
         {/* Botón de Admin (solo visible para administradores) */}
         {isAdmin && (
