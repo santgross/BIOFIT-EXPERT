@@ -1,8 +1,7 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Timer, Star, CheckCircle2 } from 'lucide-react';
-import { DATA_BY_LEVEL, GAME_IDS } from '../constants';
+import { DATA_BY_LEVEL } from '../constants';
 import { Button } from '../components/Button';
-import { supabase } from '../supabaseClient';
 
 interface Props {
   level: 1 | 2 | 3;
@@ -10,6 +9,7 @@ interface Props {
 }
 
 export const TriviaGame: React.FC<Props> = ({ level, onComplete }) => {
+  const [questions, setQuestions] = useState<any[]>([]);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [selectedOption, setSelectedOption] = useState<number | null>(null);
   const [showResult, setShowResult] = useState(false);
@@ -17,45 +17,20 @@ export const TriviaGame: React.FC<Props> = ({ level, onComplete }) => {
   const [timeLeft, setTimeLeft] = useState(30);
   const [isFinished, setIsFinished] = useState(false);
   const [showCelebration, setShowCelebration] = useState(false);
-  const [currentTriviaLevel, setCurrentTriviaLevel] = useState(1);
 
   useEffect(() => {
-    loadTriviaProgress();
+    loadAllQuestions();
   }, []);
 
-  const loadTriviaProgress = async () => {
-    try {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) {
-        setCurrentTriviaLevel(1);
-        return;
-      }
-
-      const { data: gameState } = await supabase
-        .from('game_state')
-        .select('completed_games')
-        .eq('user_id', session.user.id)
-        .single();
-
-      const completed = gameState?.completed_games || [];
-      
-      let levelToLoad = 1;
-      if (completed.includes('trivia-level-1') && completed.includes('trivia-level-2')) {
-        levelToLoad = 3;
-      } else if (completed.includes('trivia-level-1')) {
-        levelToLoad = 2;
-      }
-
-      setCurrentTriviaLevel(levelToLoad);
-    } catch (error) {
-      console.error('Error loading trivia progress:', error);
-      setCurrentTriviaLevel(1);
-    }
+  const loadAllQuestions = () => {
+    // Cargar TODAS las preguntas de todos los niveles
+    const allQuestions = [
+      ...DATA_BY_LEVEL.TRIVIA[1],
+      ...DATA_BY_LEVEL.TRIVIA[2],
+      ...DATA_BY_LEVEL.TRIVIA[3]
+    ];
+    setQuestions(allQuestions);
   };
-
-  const questions = useMemo(() => {
-    return DATA_BY_LEVEL.TRIVIA[currentTriviaLevel] || [];
-  }, [currentTriviaLevel]);
 
   useEffect(() => {
     if (showResult || isFinished || timeLeft === 0) return;
@@ -103,47 +78,7 @@ export const TriviaGame: React.FC<Props> = ({ level, onComplete }) => {
       setTimeLeft(30);
     } else {
       setIsFinished(true);
-    }
-  };
-
-  const handleComplete = async () => {
-    try {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) {
-        onComplete(score);
-        return;
-      }
-
-      const { data: gameState } = await supabase
-        .from('game_state')
-        .select('completed_games, points')
-        .eq('user_id', session.user.id)
-        .single();
-
-      const completed = gameState?.completed_games || [];
-      const gameId = GAME_IDS.TRIVIA[currentTriviaLevel];
-      const alreadyCompleted = completed.includes(gameId);
-
-      if (!alreadyCompleted) {
-        const newCompleted = [...completed, gameId];
-        const currentPoints = gameState?.points || 0;
-        
-        await supabase
-          .from('game_state')
-          .update({ 
-            completed_games: newCompleted,
-            points: currentPoints + score
-          })
-          .eq('user_id', session.user.id);
-      }
-
       setShowCelebration(true);
-      setTimeout(() => {
-        onComplete(score);
-      }, 2000);
-    } catch (error) {
-      console.error('Error saving trivia progress:', error);
-      onComplete(score);
     }
   };
 
@@ -199,7 +134,7 @@ export const TriviaGame: React.FC<Props> = ({ level, onComplete }) => {
             <CheckCircle2 size={48} />
           </div>
           <h2 className="text-3xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent mb-2">
-            ¡Nivel {currentTriviaLevel} Completado!
+            ¡Módulo Completado!
           </h2>
           <p className="text-gray-600 mb-4">Has demostrado tu conocimiento sobre BIOFIT</p>
           
@@ -210,7 +145,7 @@ export const TriviaGame: React.FC<Props> = ({ level, onComplete }) => {
             </p>
           </div>
 
-          <Button onClick={handleComplete} fullWidth className="shadow-lg">
+          <Button onClick={() => onComplete(score)} fullWidth className="shadow-lg">
             Continuar al Menú
           </Button>
         </div>
@@ -247,13 +182,16 @@ export const TriviaGame: React.FC<Props> = ({ level, onComplete }) => {
     <div className="space-y-6 flex flex-col h-full">
       <div className="flex justify-between items-center">
         <span className="text-xs font-bold uppercase text-purple-600 bg-purple-100 px-3 py-1 rounded">
-          Nivel {currentTriviaLevel} - Pregunta {currentQuestionIndex + 1}/{questions.length}
+          Pregunta {currentQuestionIndex + 1}/{questions.length}
         </span>
-        <div className={`flex items-center gap-2 px-3 py-1 rounded font-bold ${
-          timeLeft <= 10 ? 'bg-red-100 text-red-600' : 'bg-blue-100 text-blue-600'
-        }`}>
-          <Timer size={16} />
-          <span>{timeLeft}s</span>
+        <div className="flex items-center gap-4">
+          <span className="text-sm font-bold text-gray-600">Puntos: {score}</span>
+          <div className={`flex items-center gap-2 px-3 py-1 rounded font-bold ${
+            timeLeft <= 10 ? 'bg-red-100 text-red-600' : 'bg-blue-100 text-blue-600'
+          }`}>
+            <Timer size={16} />
+            <span>{timeLeft}s</span>
+          </div>
         </div>
       </div>
 
@@ -264,7 +202,7 @@ export const TriviaGame: React.FC<Props> = ({ level, onComplete }) => {
       </div>
 
       <div className="space-y-3 flex-grow">
-        {currentQuestion.options.map((option, index) => {
+        {currentQuestion.options.map((option: string, index: number) => {
           let buttonStyle = "bg-white border-2 border-gray-200 text-gray-700 hover:border-purple-300 hover:bg-purple-50";
           
           if (showResult) {
@@ -307,7 +245,7 @@ export const TriviaGame: React.FC<Props> = ({ level, onComplete }) => {
             {isCorrect ? '¡Correcto! +50 puntos' : 'Incorrecto - Respuesta correcta marcada'}
           </p>
           <Button onClick={handleNext} fullWidth>
-            {currentQuestionIndex < questions.length - 1 ? 'Siguiente Pregunta' : 'Ver Resultados'}
+            {currentQuestionIndex < questions.length - 1 ? 'Siguiente Pregunta' : 'Finalizar Módulo'}
           </Button>
         </div>
       )}
