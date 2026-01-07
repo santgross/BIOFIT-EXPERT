@@ -185,7 +185,7 @@ export function Register({ onRegister, onSwitchToLogin }: RegisterProps) {
         {/* Logo */}
         <div className="text-center mb-6">
           <img
-            src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/LOGO%20BIOFIT%20MENTA-removebg-preview-4LmKBKaI0k1PlUF1tn5nCFTFrL7tBg.png"
+            src="/LOGO-BIOFIT-SIN-FONDO.png"
             alt="BIOFIT Logo"
             className="h-20 mx-auto mb-4"
           />
