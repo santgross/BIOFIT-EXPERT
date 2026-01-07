@@ -92,7 +92,7 @@ export function AdminDashboard({ onBack }: AdminDashboardProps) {
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="bg-white rounded-lg shadow-lg p-6 mb-6">
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
             <div className="flex items-center gap-4">
               <img
                 src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/LOGO%20BIOFIT%20MENTA-removebg-preview-4LmKBKaI0k1PlUF1tn5nCFTFrL7tBg.png"
@@ -100,20 +100,20 @@ export function AdminDashboard({ onBack }: AdminDashboardProps) {
                 className="h-16"
               />
               <div>
-                <h1 className="text-3xl font-bold text-gray-800">Dashboard Administrativo</h1>
-                <p className="text-gray-600">Panel de control BIOFIT TRIVIA</p>
+                <h1 className="text-2xl sm:text-3xl font-bold text-gray-800">Dashboard Administrativo</h1>
+                <p className="text-gray-600 text-sm sm:text-base">Panel de control BIOFIT TRIVIA</p>
               </div>
             </div>
-            <div className="flex gap-2">
+            <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
               <button
                 onClick={onBack}
-                className="flex items-center gap-2 px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition"
+                className="flex items-center justify-center gap-2 px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition w-full sm:w-auto"
               >
                 Volver
               </button>
               <button
                 onClick={handleLogout}
-                className="flex items-center gap-2 px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition"
+                className="flex items-center justify-center gap-2 px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition w-full sm:w-auto"
               >
                 <LogOut size={20} />
                 Salir
