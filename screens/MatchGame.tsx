@@ -1,9 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { DATA_BY_LEVEL, GAME_IDS } from '../constants';
+import { DATA_BY_LEVEL } from '../constants';
 import { MatchItem } from '../types';
 import { Button } from '../components/Button';
 import { Shuffle, Star } from 'lucide-react';
-import { supabase } from '../supabaseClient';
 
 interface Props {
   level: 1 | 2 | 3;
@@ -16,49 +15,20 @@ export const MatchGame: React.FC<Props> = ({ level, onComplete }) => {
   const [matchedIds, setMatchedIds] = useState<string[]>([]);
   const [wrongPair, setWrongPair] = useState<string[]>([]);
   const [attempts, setAttempts] = useState(0);
+  const [score, setScore] = useState(0);
   const [showCelebration, setShowCelebration] = useState(false);
-  const [currentMatchLevel, setCurrentMatchLevel] = useState(1);
 
   useEffect(() => {
-    loadMatchProgress();
+    loadAllLevels();
   }, []);
 
-  const loadMatchProgress = async () => {
-    try {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) {
-        setCurrentMatchLevel(1);
-        loadLevel(1);
-        return;
-      }
-
-      const { data: gameState } = await supabase
-        .from('game_state')
-        .select('completed_games')
-        .eq('user_id', session.user.id)
-        .single();
-
-      const completed = gameState?.completed_games || [];
-      
-      let levelToLoad = 1;
-      if (completed.includes('match-level-1') && completed.includes('match-level-2')) {
-        levelToLoad = 3;
-      } else if (completed.includes('match-level-1')) {
-        levelToLoad = 2;
-      }
-
-      setCurrentMatchLevel(levelToLoad);
-      loadLevel(levelToLoad);
-    } catch (error) {
-      console.error('Error loading match progress:', error);
-      setCurrentMatchLevel(1);
-      loadLevel(1);
-    }
-  };
-
-  const loadLevel = (matchLevel: number) => {
-    const levelItems = DATA_BY_LEVEL.MATCH[matchLevel];
-    const shuffled = [...levelItems].sort(() => Math.random() - 0.5);
+  const loadAllLevels = () => {
+    // Cargar TODAS las preguntas de todos los niveles
+    const allItems = [
+      ...DATA_BY_LEVEL.MATCH[1],
+      ...DATA_BY_LEVEL.MATCH[2]
+    ];
+    const shuffled = [...allItems].sort(() => Math.random() - 0.5);
     setItems(shuffled);
     setMatchedIds([]);
     setAttempts(0);
@@ -79,6 +49,8 @@ export const MatchGame: React.FC<Props> = ({ level, onComplete }) => {
       if (firstItem && secondItem && firstItem.matchId === secondItem.id) {
         setMatchedIds(prev => [...prev, firstItem.id, secondItem.id]);
         setSelectedId(null);
+        // Sumar 50 puntos por cada par correcto
+        setScore(s => s + 50);
       } else {
         setWrongPair([selectedId, id]);
         setTimeout(() => {
@@ -91,58 +63,14 @@ export const MatchGame: React.FC<Props> = ({ level, onComplete }) => {
 
   const allMatched = items.length > 0 && matchedIds.length === items.length;
 
-  const handleComplete = async () => {
-    const minAttempts = items.length / 2;
-    const penalty = Math.max(0, (attempts - minAttempts) * 10);
-    const baseScore = currentMatchLevel === 3 ? 150 : (currentMatchLevel === 2 ? 120 : 100); 
-    const finalScore = Math.max(20, baseScore - penalty);
-
-    try {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) {
-        onComplete(finalScore);
-        return;
-      }
-
-      const { data: gameState } = await supabase
-        .from('game_state')
-        .select('completed_games, points')
-        .eq('user_id', session.user.id)
-        .single();
-
-      const completed = gameState?.completed_games || [];
-      const gameId = GAME_IDS.MATCH[currentMatchLevel];
-      const alreadyCompleted = completed.includes(gameId);
-
-      if (!alreadyCompleted) {
-        const newCompleted = [...completed, gameId];
-        const currentPoints = gameState?.points || 0;
-        
-        await supabase
-          .from('game_state')
-          .update({ 
-            completed_games: newCompleted,
-            points: currentPoints + finalScore
-          })
-          .eq('user_id', session.user.id);
-      }
-
-      setShowCelebration(true);
-      setTimeout(() => {
-        onComplete(finalScore);
-      }, 2000);
-    } catch (error) {
-      console.error('Error saving match progress:', error);
-      onComplete(finalScore);
-    }
+  const handleComplete = () => {
+    setShowCelebration(true);
+    setTimeout(() => {
+      onComplete(score);
+    }, 2000);
   };
 
   if (allMatched) {
-    const minAttempts = items.length / 2;
-    const penalty = Math.max(0, (attempts - minAttempts) * 10);
-    const baseScore = currentMatchLevel === 3 ? 150 : (currentMatchLevel === 2 ? 120 : 100); 
-    const finalScore = Math.max(20, baseScore - penalty);
-
     return (
       <div className="min-h-screen bg-gradient-to-br from-yellow-50 via-orange-50 to-yellow-50 flex items-center justify-center p-4 relative overflow-hidden">
         {showCelebration && (
@@ -186,14 +114,14 @@ export const MatchGame: React.FC<Props> = ({ level, onComplete }) => {
             <Shuffle size={48} />
           </div>
           <h2 className="text-3xl font-bold bg-gradient-to-r from-orange-600 to-yellow-600 bg-clip-text text-transparent mb-2">
-            ¡Nivel {currentMatchLevel} Completado!
+            ¡Módulo Completado!
           </h2>
           <p className="text-gray-600 mb-4">Intentos: {attempts}</p>
           
           <div className="bg-gradient-to-br from-yellow-50 to-orange-50 rounded-2xl p-6 mb-6 border-2 border-yellow-200">
             <p className="text-gray-700 text-lg mb-2 font-semibold">Puntos Ganados</p>
             <p className="text-6xl font-black bg-gradient-to-r from-orange-600 to-yellow-600 bg-clip-text text-transparent">
-              {finalScore}
+              {score}
             </p>
           </div>
 
@@ -230,8 +158,10 @@ export const MatchGame: React.FC<Props> = ({ level, onComplete }) => {
   return (
     <div className="h-full flex flex-col">
       <div className="flex justify-between items-center mb-4">
-        <span className="text-xs font-bold uppercase text-yellow-600 bg-yellow-100 px-2 py-1 rounded">Nivel {currentMatchLevel}</span>
-        <h3 className="text-gray-600 font-medium">Selecciona pares</h3>
+        <span className="text-xs font-bold uppercase text-yellow-600 bg-yellow-100 px-2 py-1 rounded">
+          Match de Conceptos
+        </span>
+        <span className="text-sm font-bold text-gray-600">Puntos: {score}</span>
       </div>
       
       <div className="grid grid-cols-2 gap-3">
