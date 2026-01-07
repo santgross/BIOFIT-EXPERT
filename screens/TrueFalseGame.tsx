@@ -3,7 +3,6 @@ import { CheckCircle, XCircle, Star } from 'lucide-react';
 import { DATA_BY_LEVEL } from '../constants';
 import { QuestionTF } from '../types';
 import { Button } from '../components/Button';
-import { supabase } from '../supabaseClient';
 
 interface Props {
   level: 1 | 2 | 3;
@@ -17,7 +16,6 @@ export const TrueFalseGame: React.FC<Props> = ({ level, onComplete }) => {
   const [showResult, setShowResult] = useState(false);
   const [isCorrect, setIsCorrect] = useState(false);
   const [score, setScore] = useState(0);
-  const [completedIds, setCompletedIds] = useState<string[]>([]);
   const [gameFinished, setGameFinished] = useState(false);
   const [showCelebration, setShowCelebration] = useState(false);
 
@@ -25,50 +23,13 @@ export const TrueFalseGame: React.FC<Props> = ({ level, onComplete }) => {
     loadQuestions();
   }, [level]);
 
-  const loadQuestions = async () => {
-    try {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) {
-        const allQuestions = [
-          ...DATA_BY_LEVEL.TF[1],
-          ...DATA_BY_LEVEL.TF[2],
-          ...DATA_BY_LEVEL.TF[3]
-        ];
-        setAvailableQuestions(allQuestions);
-        return;
-      }
-
-      const { data: gameState } = await supabase
-        .from('game_state')
-        .select('completed_games')
-        .eq('user_id', session.user.id)
-        .single();
-
-      const completed = gameState?.completed_games || [];
-      setCompletedIds(completed);
-
-      const allQuestions = [
-        ...DATA_BY_LEVEL.TF[1],
-        ...DATA_BY_LEVEL.TF[2],
-        ...DATA_BY_LEVEL.TF[3]
-      ];
-
-      const remaining = allQuestions.filter(q => !completed.includes(`tf${q.id}`));
-      
-      if (remaining.length === 0) {
-        setAvailableQuestions(allQuestions);
-      } else {
-        setAvailableQuestions(remaining);
-      }
-    } catch (error) {
-      console.error('Error loading questions:', error);
-      const allQuestions = [
-        ...DATA_BY_LEVEL.TF[1],
-        ...DATA_BY_LEVEL.TF[2],
-        ...DATA_BY_LEVEL.TF[3]
-      ];
-      setAvailableQuestions(allQuestions);
-    }
+  const loadQuestions = () => {
+    const allQuestions = [
+      ...DATA_BY_LEVEL.TF[1],
+      ...DATA_BY_LEVEL.TF[2],
+      ...DATA_BY_LEVEL.TF[3]
+    ];
+    setAvailableQuestions(allQuestions);
   };
 
   const handleAnswer = (answer: boolean) => {
@@ -82,89 +43,24 @@ export const TrueFalseGame: React.FC<Props> = ({ level, onComplete }) => {
     setShowResult(true);
   };
 
-  const handleNextQuestion = async () => {
+  const handleNextQuestion = () => {
     if (!isCorrect) {
       setShowResult(false);
       setSelectedAnswer(null);
       return;
     }
 
-    const currentQuestion = availableQuestions[currentQuestionIndex];
-
-    try {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) return;
-
-      // Verificar si ya está completada
-      const { data: gameState } = await supabase
-        .from('game_state')
-        .select('completed_games, points')
-        .eq('user_id', session.user.id)
-        .single();
-
-      const completed = gameState?.completed_games || [];
-      const questionId = `tf${currentQuestion.id}`;
-      const alreadyCompleted = completed.includes(questionId);
-
-      // Solo guardar y sumar puntos si NO está completada
-      if (!alreadyCompleted) {
-        const newCompleted = [...completed, questionId];
-        const currentPoints = gameState?.points || 0;
-
-        await supabase
-          .from('game_state')
-          .update({ 
-            completed_games: newCompleted,
-            points: currentPoints + 50
-          })
-          .eq('user_id', session.user.id);
-
-        setScore(s => s + 50);
-        setCompletedIds(newCompleted);
-      }
-    } catch (error) {
-      console.error('Error saving progress:', error);
-    }
+    // Sumar puntos solo si la respuesta es correcta
+    setScore(s => s + 50);
 
     if (currentQuestionIndex < availableQuestions.length - 1) {
       setCurrentQuestionIndex(prev => prev + 1);
       setShowResult(false);
       setSelectedAnswer(null);
     } else {
-      await markModuleComplete();
-    }
-  };
-
-  const markModuleComplete = async () => {
-    try {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) {
-        setGameFinished(true);
-        return;
-      }
-
-      const { data: gameState } = await supabase
-        .from('game_state')
-        .select('completed_games')
-        .eq('user_id', session.user.id)
-        .single();
-
-      const completed = gameState?.completed_games || [];
-      
-      if (!completed.includes('true-false-complete')) {
-        const newCompleted = [...completed, 'true-false-complete'];
-        
-        await supabase
-          .from('game_state')
-          .update({ completed_games: newCompleted })
-          .eq('user_id', session.user.id);
-      }
-
+      // Última pregunta completada
       setGameFinished(true);
       setShowCelebration(true);
-    } catch (error) {
-      console.error('Error marking module complete:', error);
-      setGameFinished(true);
     }
   };
 
