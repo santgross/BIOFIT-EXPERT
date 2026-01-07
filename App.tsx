@@ -6,6 +6,7 @@ import { MatchGame } from './screens/MatchGame';
 import { ScenarioGame } from './screens/ScenarioGame';
 import { TriviaGame } from './screens/TriviaGame';
 import { BadgesScreen } from './screens/Badges';
+import { Certificate } from './screens/Certificate';
 import { Register } from './screens/Register';
 import { Login } from './screens/Login';
 import { PrivacyConsent } from './components/PrivacyConsent';
@@ -256,6 +257,8 @@ export default function App() {
         return <BadgesScreen gameState={gameState} onBack={() => setCurrentScreen(Screen.HOME)} />;
       case Screen.ADMIN:
         return <AdminDashboard onBack={() => setCurrentScreen(Screen.HOME)} />;
+        case Screen.CERTIFICATE:
+        return <Certificate userName={user?.name || 'Usuario'} onBack={() => setCurrentScreen(Screen.HOME)} />;
       default:
         return (
           <Home 
