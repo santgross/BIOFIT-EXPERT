@@ -1,6 +1,8 @@
 name: Build React App
+
 on:
   workflow_dispatch:
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -20,8 +22,14 @@ jobs:
       - name: Build
         run: npm run build
       
+      - name: Create zip
+        run: |
+          cd dist
+          zip -r ../dist-complete.zip .
+          cd ..
+      
       - name: Upload build artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: dist
-          path: dist/
+          name: dist-complete
+          path: dist-complete.zip
